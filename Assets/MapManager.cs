@@ -11,8 +11,6 @@ using static System.Net.WebRequestMethods;
 
 public class MapManager : MonoBehaviour
 {
-    CloudAnchorManager script;
-
     public RawImage mapRawImage;
     public Text progressText;
     public bool isUpdating;
@@ -60,7 +58,18 @@ public class MapManager : MonoBehaviour
             StartCoroutine(GetLocation());
             isUpdating = !isUpdating;
         }
-        script = GetComponent<CloudAnchorManager>();
+        buttonMP.onClick.AddListener(() =>
+        {
+            PopUp_M.SetActive(false);
+            latTmp = 0;
+            lngTmp = 0;
+            mapRawImage.texture = null;
+        });
+        buttonMN.onClick.AddListener(() =>
+        {
+            mapRawImage.texture = null;
+            Start();
+        });
     }
 
     IEnumerator GetLocation()
@@ -139,7 +148,6 @@ public class MapManager : MonoBehaviour
         yield return req.SendWebRequest();
 
         mapRawImage.texture = DownloadHandlerTexture.GetContent(req);
-
     }
 
     // Update is called once per frame
@@ -153,17 +161,5 @@ public class MapManager : MonoBehaviour
         {
             StartCoroutine(LoadMap());
         }
-        buttonMP.onClick.AddListener(() =>
-        {
-            PopUp_M.SetActive(false);
-            latTmp = 0; 
-            lngTmp = 0;
-            mapRawImage.texture = null;
-            //script.PopUp_T.SetActive(true);
-        });
-        buttonMN.onClick.AddListener(() =>
-        {
-            Start();
-        });
     }
 }

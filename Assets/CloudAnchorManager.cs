@@ -20,7 +20,7 @@ using static CloudAnchorManager;
 
 public class CloudAnchorManager : MonoBehaviour
 {
-    MapManager mapmanager;
+    //MapManager mapmanager;
     public enum Mode { READY, HOST, HOST_PENDING, RESOLVE, RESOLVE_PENDING };   // 상태 변수
 
     public Button hostButton;       // 클라우드 앵커 등록
@@ -49,17 +49,19 @@ public class CloudAnchorManager : MonoBehaviour
         public object memo;
         public int type;  //글1 이미지2 비디오3 오디오4
         public string nickname;
-        //public double latitude;
-        //public double longitude;
+        public double latitude;
+        public double longitude;
+        public string address;
 
-        public Memo(string anchorID, object memo, int type, string nickname) //double latitude, double longitude
+        public Memo(string anchorID, object memo, int type, string nickname, double latitude, double longitude, string address)
         {
             this.anchorID = anchorID;
             this.memo = memo;
             this.type = type;
             this.nickname = nickname;
-            //this.latitude = latitude;
-            //this.longitude = longitude;
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.address = address;
         }
     }
     public List<Memo> memoList = new List<Memo>();
@@ -80,11 +82,11 @@ public class CloudAnchorManager : MonoBehaviour
     public Dictionary<ARCloudAnchor, Anchor> cloudAnchors = new Dictionary<ARCloudAnchor, Anchor>();
     public Dictionary<GameObject, Anchor> anchorGameObjects = new Dictionary<GameObject, Anchor>();
 
-    public GameObject PopUp_H, PopUp_T, PopUp_I, PopUp_R, PopUp_V, PopUp_A, PopUp_M; // CM;
-    public Button buttonT, buttonI, buttonV, buttonA, buttonX; // buttonCM;
+    public GameObject PopUp_H, PopUp_T, PopUp_I, PopUp_R, PopUp_V, PopUp_A, PopUp_M;
+    public Button buttonT, buttonI, buttonV, buttonA, buttonX;
     public Button buttonTC, buttonIS, buttonIC, buttonVS, buttonVC, buttonAS, buttonAC, buttonP, buttonS, buttonRP, buttonRS;
     public Button buttonTL, buttonIL, buttonVL, buttonAL;
-    public InputField inputT; //inputCM;
+    public InputField inputT;
     public RawImage img;
     public RawImage video;
     public VideoPlayer videoPlayer;
@@ -103,8 +105,11 @@ public class CloudAnchorManager : MonoBehaviour
 
     [SerializeField] private Camera arCamera;
 
+    public InputField inputAddress;
+
     void Start()
     {
+        MapManager MapInstance = new MapManager();
         myNickname = "myName";
 
         hostButton.onClick.AddListener(() => {
@@ -128,14 +133,15 @@ public class CloudAnchorManager : MonoBehaviour
         });
         buttonTC.onClick.AddListener(() => {
             PopUp_T.SetActive(false);
-            //cloudAnchors.Add(cloudAnchor, new Anchor() { memo = inputT.text, type = 1, nickname = myNickname });
+            cloudAnchors.Add(cloudAnchor, new Anchor() { memo = inputT.text, type = 1, nickname = myNickname });
             textPrefab.transform.Find("nickname").GetComponent<TextMesh>().text = myNickname;
-            anchorGameObjects.Add(Instantiate(textPrefab, cloudAnchor.transform), new Anchor() { memo = inputT.text, type = 1, nickname = myNickname });
-            memoList.Add(new Memo() { anchorID = cloudAnchor.cloudAnchorId, memo = inputT.text, type = 1, nickname = myNickname });
+            //anchorGameObjects.Add(Instantiate(textPrefab, cloudAnchor.transform), new Anchor() { memo = inputT.text, type = 1, nickname = myNickname });
+            memoList.Add(new Memo() { anchorID=cloudAnchor.cloudAnchorId, memo=inputT.text, type=1, nickname=myNickname, latitude=MapInstance.latitude, longitude=MapInstance.longitude, address=inputAddress.text });
             localAnchor = null; cloudAnchor = null; Destroy(anchorGameObject);
             inputT.text = "";
             buttonTL.gameObject.SetActive(true);
             buttonTC.gameObject.SetActive(false);
+            inputAddress.text = "";
             mode = Mode.RESOLVE_PENDING;
         });
         buttonI.onClick.AddListener(() =>
@@ -157,12 +163,13 @@ public class CloudAnchorManager : MonoBehaviour
             PopUp_I.SetActive(false);
             imagePrefab.transform.Find("nickname").GetComponent<TextMesh>().text = myNickname;
             anchorGameObjects.Add(Instantiate(imagePrefab, cloudAnchor.transform), new Anchor() { memo = texture, type = 2, nickname = myNickname });
-            memoList.Add(new Memo() { anchorID = cloudAnchor.cloudAnchorId, memo = texture, type = 2, nickname = myNickname });
+            memoList.Add(new Memo() { anchorID = cloudAnchor.cloudAnchorId, memo = texture, type = 2, nickname = myNickname, latitude = MapInstance.latitude, longitude = MapInstance.longitude, address = inputAddress.text });
             localAnchor = null; cloudAnchor = null; Destroy(anchorGameObject);
             texture = null; img.texture = null;
             ImageSizeReturn(img, 300, 250);
             buttonIL.gameObject.SetActive(true);
             buttonIC.gameObject.SetActive(false);
+            inputAddress.text = "";
             mode = Mode.RESOLVE_PENDING;
         });
         buttonV.onClick.AddListener(() =>
@@ -186,15 +193,16 @@ public class CloudAnchorManager : MonoBehaviour
             PopUp_V.SetActive(false);
             videoPrefab.transform.Find("nickname").GetComponent<TextMesh>().text = myNickname;
             anchorGameObjects.Add(Instantiate(videoPrefab, cloudAnchor.transform), new Anchor() { memo = vPath, type = 3, nickname = myNickname });
-            memoList.Add(new Memo() { anchorID = cloudAnchor.cloudAnchorId, memo = vPath, type = 3, nickname = myNickname });
+            memoList.Add(new Memo() { anchorID = cloudAnchor.cloudAnchorId, memo = vPath, type = 3, nickname = myNickname, latitude = MapInstance.latitude, longitude = MapInstance.longitude, address = inputAddress.text });
             localAnchor = null; cloudAnchor = null; Destroy(anchorGameObject);
             //renderTexture = null;
             video.texture = null;
-            ImageSizeReturn(img, 300, 250);
+            ImageSizeReturn(video, 300, 250);
             buttonVL.gameObject.SetActive(true);
             buttonVC.gameObject.SetActive(false);
             videoPlayer.gameObject.SetActive(false);
             videoPlayer.url = null;
+            inputAddress.text = "";
             mode = Mode.RESOLVE_PENDING;
         });
         buttonA.onClick.AddListener(() =>
@@ -217,11 +225,12 @@ public class CloudAnchorManager : MonoBehaviour
             PopUp_A.SetActive(false);
             audioPrefab.transform.Find("nickname").GetComponent<TextMesh>().text = myNickname;
             anchorGameObjects.Add(Instantiate(audioPrefab, cloudAnchor.transform), new Anchor() { memo = aPath, type = 4, nickname = myNickname });
-            memoList.Add(new Memo() { anchorID = cloudAnchor.cloudAnchorId, memo = aPath, type = 4, nickname = myNickname });
+            memoList.Add(new Memo() { anchorID = cloudAnchor.cloudAnchorId, memo = aPath, type = 4, nickname = myNickname, latitude = MapInstance.latitude, longitude = MapInstance.longitude, address = inputAddress.text });
             localAnchor = null; cloudAnchor = null; Destroy(anchorGameObject);
             buttonAL.gameObject.SetActive(true);
             buttonAC.gameObject.SetActive(false);
             audioSource.gameObject.SetActive(false);
+            inputAddress.text = "";
             mode = Mode.RESOLVE_PENDING;
         });
         buttonP.onClick.AddListener(() =>
@@ -250,11 +259,6 @@ public class CloudAnchorManager : MonoBehaviour
             aSource.Stop();
             aSource.gameObject.SetActive(false);
         });
-        //buttonCM.onClick.AddListener(() =>
-        //{
-        //    comments.Add(myNickname, inputCM.text);
-        //    inputCM.text = "";
-        //});
         buttonX.onClick.AddListener(() =>
         {
             PopUp_R.SetActive(false);
@@ -577,6 +581,7 @@ public class CloudAnchorManager : MonoBehaviour
 
     void ResolvePending()
     {
+        messageText.text = "ResolvePending";
         if (cloudAnchors.Count == 0) return;
         bool allAnchorsResolved = true;
         foreach (KeyValuePair<ARCloudAnchor, Anchor> item in cloudAnchors)
