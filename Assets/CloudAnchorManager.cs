@@ -12,24 +12,18 @@ using Google.XR.ARCoreExtensions;
 using System;
 using System.Linq;
 using System.IO;
-using System.Collections;
 
 using NAudio;
 using NAudio.Wave;
 using static CloudAnchorManager;
+//using static UnityEditor.Progress;
 
 public class CloudAnchorManager : MonoBehaviour
 {
-    //MapManager mapmanager;
     public enum Mode { READY, HOST, HOST_PENDING, RESOLVE, RESOLVE_PENDING };   // 상태 변수
 
-    public Button hostButton;       // 클라우드 앵커 등록
-    //public Button resolveButton;    // 클라우드 앵커 조회
-    public Button resetButton;      // 리셋
-    public Button cancelButton;      // 호스팅(인식) 중 취소
-
+    public Button hostButton, resetButton, cancelButton;  
     public Text messageText;    // 메세지 출력 텍스트
-
     public Mode mode = Mode.READY;
     public ARAnchorManager anchorManager;
     public ARRaycastManager raycastManager;
@@ -40,47 +34,59 @@ public class CloudAnchorManager : MonoBehaviour
 
     private ARAnchor localAnchor;   // 로컬앵커 저장 변수
     private ARCloudAnchor cloudAnchor;  // 클라우드 앵커 변수
-
     private List<ARRaycastHit> hits = new List<ARRaycastHit>(); // Raycast Hit
 
     public struct Memo
     {
-        public string anchorID;
-        public object memo;
-        public int type;  //글1 이미지2 비디오3 오디오4
+        public string anchorId;
+        public string memoType;  //글A 사진B 음성C 영상D
         public string nickname;
-        public double latitude;
-        public double longitude;
-        public string address;
+        public string memo_content;
 
-        public Memo(string anchorID, object memo, int type, string nickname, double latitude, double longitude, string address)
+        public Memo(string anchorId, string memoType, string nickname, string memo_content)
         {
-            this.anchorID = anchorID;
-            this.memo = memo;
-            this.type = type;
+            this.anchorId = anchorId;
+            this.memoType = memoType;
             this.nickname = nickname;
-            this.latitude = latitude;
-            this.longitude = longitude;
-            this.address = address;
+            this.memo_content = memo_content;
         }
     }
     public List<Memo> memoList = new List<Memo>();
-
-    public struct Anchor
+#nullable enable
+    [System.Serializable]
+    public struct MemoContent
     {
-        public object memo;
-        public int type;  //글1 이미지2 비디오3 오디오4
-        public string nickname;
-
-        public Anchor(object memo, int type, string nickname)
-        {
-            this.memo = memo;
-            this.type = type;
-            this.nickname = nickname;
-        }
+        public int id;
+        public string text;
+        public string picture; // 이미지 경로
+        public string video; // 비디오 경로
+        public string record; // 오디오 경로
     }
-    public Dictionary<ARCloudAnchor, Anchor> cloudAnchors = new Dictionary<ARCloudAnchor, Anchor>();
-    public Dictionary<GameObject, Anchor> anchorGameObjects = new Dictionary<GameObject, Anchor>();
+    [System.Serializable]
+    public struct ServerHistory
+    {
+        public int id;
+        public string anchorId;
+        public int userId;
+        public string date;
+        public string memoType;
+        public int objectNumber;
+        public float latitude;
+        public float longitude;
+        public string open;
+        public string detailAddr;
+        public MemoContent memo_content;
+        public string nickname;
+    }
+    [Serializable]
+    public class Wrapper
+    {
+        public List<ServerHistory> data;
+    }
+    public List<ServerHistory> historyList;
+
+    public Dictionary<ARCloudAnchor, Memo> cloudAnchors = new Dictionary<ARCloudAnchor, Memo>();
+    public Dictionary<GameObject, Memo> anchorGameObjects = new Dictionary<GameObject, Memo>();
 
     public GameObject PopUp_H, PopUp_T, PopUp_I, PopUp_R, PopUp_V, PopUp_A, PopUp_M;
     public Button buttonT, buttonI, buttonV, buttonA, buttonX;
@@ -93,7 +99,7 @@ public class CloudAnchorManager : MonoBehaviour
     public AudioSource audioSource;
 
     private Texture2D texture;
-    //private RenderTexture renderTexture;
+    private string iPath;
     private string vPath;
     private string aPath;
 
@@ -102,22 +108,24 @@ public class CloudAnchorManager : MonoBehaviour
     public VideoPlayer vp;
     public AudioSource aSource;
     private string myNickname;
+    private string myId;
 
     [SerializeField] private Camera arCamera;
 
     public InputField inputAddress;
+    public byte[] postByte;
 
     void Start()
     {
         MapManager MapInstance = new MapManager();
         myNickname = "myName";
+        myId = "2";
 
         hostButton.onClick.AddListener(() => {
             cancelButton.gameObject.SetActive(true);
             hostButton.gameObject.SetActive(false);
             OnHostClick();
         });
-        //resolveButton.onClick.AddListener(() => OnResolveClick());
         resetButton.onClick.AddListener(() => OnResetClick());
         cancelButton.onClick.AddListener(() => OnCancelClick());
         buttonT.onClick.AddListener(() =>
@@ -133,15 +141,16 @@ public class CloudAnchorManager : MonoBehaviour
         });
         buttonTC.onClick.AddListener(() => {
             PopUp_T.SetActive(false);
-            cloudAnchors.Add(cloudAnchor, new Anchor() { memo = inputT.text, type = 1, nickname = myNickname });
+            //cloudAnchors.Add(cloudAnchor, new Anchor() { memo = inputT.text, type = "A", nickname = myNickname });
             textPrefab.transform.Find("nickname").GetComponent<TextMesh>().text = myNickname;
-            //anchorGameObjects.Add(Instantiate(textPrefab, cloudAnchor.transform), new Anchor() { memo = inputT.text, type = 1, nickname = myNickname });
-            memoList.Add(new Memo() { anchorID=cloudAnchor.cloudAnchorId, memo=inputT.text, type=1, nickname=myNickname, latitude=MapInstance.latitude, longitude=MapInstance.longitude, address=inputAddress.text });
-            localAnchor = null; cloudAnchor = null; Destroy(anchorGameObject);
-            inputT.text = "";
+            anchorGameObjects.Add(Instantiate(textPrefab, cloudAnchor.transform), new Memo() { anchorId = "id", memoType = "A", nickname = myNickname, memo_content = inputT.text });
+            StartCoroutine(PostMemo("A"));
+            localAnchor = null; Destroy(anchorGameObject);
+            //cloudAnchor = null;
+            //inputT.text = "";
             buttonTL.gameObject.SetActive(true);
             buttonTC.gameObject.SetActive(false);
-            inputAddress.text = "";
+            //inputAddress.text = "";
             mode = Mode.RESOLVE_PENDING;
         });
         buttonI.onClick.AddListener(() =>
@@ -162,14 +171,13 @@ public class CloudAnchorManager : MonoBehaviour
         buttonIC.onClick.AddListener(() => {
             PopUp_I.SetActive(false);
             imagePrefab.transform.Find("nickname").GetComponent<TextMesh>().text = myNickname;
-            anchorGameObjects.Add(Instantiate(imagePrefab, cloudAnchor.transform), new Anchor() { memo = texture, type = 2, nickname = myNickname });
-            memoList.Add(new Memo() { anchorID = cloudAnchor.cloudAnchorId, memo = texture, type = 2, nickname = myNickname, latitude = MapInstance.latitude, longitude = MapInstance.longitude, address = inputAddress.text });
-            localAnchor = null; cloudAnchor = null; Destroy(anchorGameObject);
-            texture = null; img.texture = null;
+            anchorGameObjects.Add(Instantiate(imagePrefab, cloudAnchor.transform), new Memo() { anchorId = "id", memoType = "B", nickname = myNickname, memo_content = iPath });
+            StartCoroutine(PostMemo("B"));
+            localAnchor = null; Destroy(anchorGameObject);
+            img.texture = null;
             ImageSizeReturn(img, 300, 250);
             buttonIL.gameObject.SetActive(true);
             buttonIC.gameObject.SetActive(false);
-            inputAddress.text = "";
             mode = Mode.RESOLVE_PENDING;
         });
         buttonV.onClick.AddListener(() =>
@@ -192,17 +200,15 @@ public class CloudAnchorManager : MonoBehaviour
         buttonVC.onClick.AddListener(() => {
             PopUp_V.SetActive(false);
             videoPrefab.transform.Find("nickname").GetComponent<TextMesh>().text = myNickname;
-            anchorGameObjects.Add(Instantiate(videoPrefab, cloudAnchor.transform), new Anchor() { memo = vPath, type = 3, nickname = myNickname });
-            memoList.Add(new Memo() { anchorID = cloudAnchor.cloudAnchorId, memo = vPath, type = 3, nickname = myNickname, latitude = MapInstance.latitude, longitude = MapInstance.longitude, address = inputAddress.text });
-            localAnchor = null; cloudAnchor = null; Destroy(anchorGameObject);
-            //renderTexture = null;
+            anchorGameObjects.Add(Instantiate(videoPrefab, cloudAnchor.transform), new Memo() { anchorId = "id", memoType = "D", nickname = myNickname, memo_content = vPath });
+            StartCoroutine(PostMemo("D"));
+            localAnchor = null; Destroy(anchorGameObject);
             video.texture = null;
             ImageSizeReturn(video, 300, 250);
             buttonVL.gameObject.SetActive(true);
             buttonVC.gameObject.SetActive(false);
             videoPlayer.gameObject.SetActive(false);
             videoPlayer.url = null;
-            inputAddress.text = "";
             mode = Mode.RESOLVE_PENDING;
         });
         buttonA.onClick.AddListener(() =>
@@ -224,13 +230,12 @@ public class CloudAnchorManager : MonoBehaviour
         buttonAC.onClick.AddListener(() => {
             PopUp_A.SetActive(false);
             audioPrefab.transform.Find("nickname").GetComponent<TextMesh>().text = myNickname;
-            anchorGameObjects.Add(Instantiate(audioPrefab, cloudAnchor.transform), new Anchor() { memo = aPath, type = 4, nickname = myNickname });
-            memoList.Add(new Memo() { anchorID = cloudAnchor.cloudAnchorId, memo = aPath, type = 4, nickname = myNickname, latitude = MapInstance.latitude, longitude = MapInstance.longitude, address = inputAddress.text });
-            localAnchor = null; cloudAnchor = null; Destroy(anchorGameObject);
+            anchorGameObjects.Add(Instantiate(audioPrefab, cloudAnchor.transform), new Memo() { anchorId = "id", memoType = "C", nickname = myNickname, memo_content = aPath });
+            StartCoroutine(PostMemo("C"));
+            localAnchor = null; Destroy(anchorGameObject);
             buttonAL.gameObject.SetActive(true);
             buttonAC.gameObject.SetActive(false);
             audioSource.gameObject.SetActive(false);
-            inputAddress.text = "";
             mode = Mode.RESOLVE_PENDING;
         });
         buttonP.onClick.AddListener(() =>
@@ -251,7 +256,14 @@ public class CloudAnchorManager : MonoBehaviour
             aSource.gameObject.SetActive(true);
             if (!string.IsNullOrEmpty(aPath))
             {
-                StartCoroutine(LoadAudio2(aPath));
+                if (aPath.Contains("media/record"))
+                {
+                    StartCoroutine(LoadAudio2(aPath));
+                }
+                else
+                {
+                    StartCoroutine(LoadAudio3(aPath));
+                }
             }
         });
         buttonRS.onClick.AddListener(() =>
@@ -272,7 +284,88 @@ public class CloudAnchorManager : MonoBehaviour
             vp.gameObject.SetActive(false);
         });
 
-        StartCoroutine(Resolving());
+        IEnumerator PostMemo(string typem)
+        {
+            string url = "http://34.64.197.160:8000/inside/addMemo/";
+            WWWForm form = new WWWForm();
+
+            string userId = myId;
+            string anchorId = cloudAnchor.cloudAnchorId;
+            string memoType = typem;
+            string latitude = MapInstance.latitude.ToString();
+            string longitude = MapInstance.longitude.ToString();
+            string open = "public";
+            string detailAddr = inputAddress.text;
+            string input = inputT.text;
+            byte[] Byte = postByte;
+
+            yield return null;
+            //값 넣기
+            form.AddField("userId", userId);
+            form.AddField("anchorId", anchorId);
+            form.AddField("memoType", memoType);
+            form.AddField("latitude", latitude);
+            form.AddField("longitude", longitude);
+            form.AddField("open", open);
+            form.AddField("detailAddr", detailAddr);
+            switch (memoType)
+            {
+                case "A": form.AddField("memo_content", input); break;
+                case "B": form.AddBinaryData("memo_content", Byte, "image.jpg", "image/jpg"); break;
+                case "C": form.AddBinaryData("memo_content", Byte, "audio.mp3", "audio/mp3"); break;
+                case "D": form.AddBinaryData("memo_content", Byte, "video.mp4", "video/mp4"); break;
+            }
+
+            UnityWebRequest www = UnityWebRequest.Post(url, form);
+            yield return www.SendWebRequest();
+
+            if (www.error == null)
+            {
+                //messageText.text = "post success";
+                cloudAnchor = null;
+                inputT.text = "";
+                inputAddress.text = "";
+            }
+            else
+            {
+                messageText.text = "error for post";
+            }
+        }
+
+        IEnumerator MemoInfoGet() //url 요청 코루틴
+        {
+            string url = "http://34.64.197.160:8000/inside/memoInfo/";
+            UnityWebRequest www = UnityWebRequest.Get(url); // get 방식으로 요청을 보냄.
+            yield return www.SendWebRequest(); //응답이 올 때까지 기다림.
+
+            if (www.error == null) //잘 도착했으면
+            {
+                string jsonString = "{\"data\":" + www.downloadHandler.text + "}";
+                Wrapper wrapper = JsonUtility.FromJson<Wrapper>(jsonString);
+                historyList = new List<ServerHistory>(wrapper.data);
+                foreach (var memo in historyList)
+                {
+                    switch (memo.memoType)
+                    {
+                        case "A":
+                            memoList.Add(new Memo() { anchorId = memo.anchorId, memoType = memo.memoType, nickname = memo.nickname, memo_content = memo.memo_content.text }); break;
+                        case "B":
+                            memoList.Add(new Memo() { anchorId = memo.anchorId, memoType = memo.memoType, nickname = memo.nickname, memo_content = memo.memo_content.picture }); break;
+                        case "C":
+                            memoList.Add(new Memo() { anchorId = memo.anchorId, memoType = memo.memoType, nickname = memo.nickname, memo_content = memo.memo_content.record }); break;
+                        case "D":
+                            memoList.Add(new Memo() { anchorId = memo.anchorId, memoType = memo.memoType, nickname = memo.nickname, memo_content = memo.memo_content.video }); break;
+                    }
+                }
+                //Resolving();
+                mode = Mode.RESOLVE;
+            }
+            else
+            {
+                messageText.text = "ERROR";
+            }
+        }
+        StartCoroutine(MemoInfoGet());
     }
 
     void Update()
@@ -288,7 +381,7 @@ public class CloudAnchorManager : MonoBehaviour
         }
         if (mode == Mode.RESOLVE)
         {
-            //Resolving();
+            Resolving();
         }
         if (mode == Mode.RESOLVE_PENDING)
         {
@@ -297,7 +390,7 @@ public class CloudAnchorManager : MonoBehaviour
         }
         if (mode == Mode.READY)
         {
-            messageText.text = "Ready";
+            //messageText.text = "Ready";
             //Checking();
         }
     }
@@ -343,6 +436,25 @@ public class CloudAnchorManager : MonoBehaviour
         messageText.text = mappingText;
     }
 
+    void HostPending()
+    {
+        string mappingText = "";
+        if (cloudAnchor.cloudAnchorState == CloudAnchorState.Success)
+        {
+            PopUp_H.SetActive(true);
+            cancelButton.gameObject.SetActive(false);
+            hostButton.gameObject.SetActive(true);
+            mappingText = $"클라우드 앵커 생성 성공, CloudAnchor ID = {cloudAnchor.cloudAnchorId}";
+
+            mode = Mode.READY;
+        }
+        else
+        {
+            mappingText = $"클라우드 앵커 생성 진행중...{cloudAnchor.cloudAnchorState}";
+        }
+        messageText.text = mappingText;
+    }
+
     void getImage() //갤러리 이미지
     {
         if(!NativeGallery.IsMediaPickerBusy())
@@ -354,32 +466,24 @@ public class CloudAnchorManager : MonoBehaviour
 
                 if (!string.IsNullOrEmpty(image))
                 {
-                    StartCoroutine(LoadImage(image));
+                    iPath = image;
+                    StartCoroutine(LoadImage(image, img));
                 }
             });
         }
     }         
-    IEnumerator LoadImage(string imagePath) //이미지 로드 코루틴   
+    IEnumerator LoadImage(string imagePath, RawImage img) //이미지 로드 코루틴   
     {
         yield return null;
-
-        //byte[] imageData = File.ReadAllBytes(imagePath);
-        //string imageName = Path.GetFileName(imagePath).Split('.')[0];
-        //string saveImagePath = Application.persistentDataPath + "/Image";
-
-        //if (!Directory.Exists(saveImagePath)) Directory.CreateDirectory(saveImagePath);
-
-        //File.WriteAllBytes(saveImagePath + imageName + ".jpg", imageData);
         NativeGallery.ImageProperties imageProperties = NativeGallery.GetImageProperties(imagePath);
         NativeGallery.ImageOrientation orientation = imageProperties.orientation;
 
-        byte[] tempImage = File.ReadAllBytes(imagePath);
+        postByte = File.ReadAllBytes(imagePath);
         texture = new Texture2D(2, 2);
-        texture.LoadImage(tempImage);
+        texture.LoadImage(postByte);
 
         if (orientation == NativeGallery.ImageOrientation.Rotate90)
         {
-            //img.transform.Rotate(new Vector3(0, 0, 90));
             texture = RotateTexture(texture, 90);
         }
         Texture2D RotateTexture(Texture2D originalTexture, int rotationAngle)
@@ -410,10 +514,26 @@ public class CloudAnchorManager : MonoBehaviour
             rotatedTexture.Apply();
             return rotatedTexture;
         }
-
         img.texture = texture;
         img.SetNativeSize();
         ImageSizeSetting(img, 300, 250);
+    }
+    IEnumerator ServerImage(string url)
+    {
+        UnityWebRequest www = UnityWebRequestTexture.GetTexture("http://34.64.197.160:8000" + url);
+        yield return www.SendWebRequest();
+        if (www.result == UnityWebRequest.Result.Success)
+        {
+            // 이미지 다운로드 성공
+            Texture2D texture = DownloadHandlerTexture.GetContent(www);
+            pop_img.texture = texture;
+            pop_img.SetNativeSize();
+            ImageSizeSetting(pop_img, 300, 250);
+        }
+        else
+        {
+            messageText.text = "Failed to download image: " + www.error;
+        }
     }
     void getVideo()
     {
@@ -424,6 +544,7 @@ public class CloudAnchorManager : MonoBehaviour
                 if (!string.IsNullOrEmpty(video))
                 {
                     vPath = video;
+                    postByte = File.ReadAllBytes(video);
                     StartCoroutine(LoadVideo(video));
                 }
             });
@@ -447,7 +568,36 @@ public class CloudAnchorManager : MonoBehaviour
 
         videoPlayer.Play(); // 비디오 재생
     }
-    IEnumerator LoadVideo2(string videoPath)
+    IEnumerator LoadVideo2(string videoURL)
+    {
+        UnityWebRequest www = UnityWebRequest.Get("http://34.64.197.160:8000" + videoURL);
+        www.downloadHandler = new DownloadHandlerBuffer();
+        yield return www.SendWebRequest();
+
+        if (www.result == UnityWebRequest.Result.Success)
+        {
+            byte[] videoData = www.downloadHandler.data;
+            string videoName = Path.GetFileName(videoURL);
+            string tempPath = Application.persistentDataPath + "/" + videoName;
+            File.WriteAllBytes(tempPath, videoData);
+
+            vp.url = tempPath;
+            vp.Prepare();
+            while (!vp.isPrepared)
+            {
+                yield return null;
+            }
+            pop_img.texture = vp.texture;
+            pop_img.SetNativeSize();
+            ImageSizeSetting(pop_img, 300, 250);
+            vp.Play();
+        }
+        else
+        {
+            messageText.text = "Failed to download video: " + www.error;
+        }
+    }
+    IEnumerator LoadVideo3(string videoPath)
     {
         yield return null;
 
@@ -474,6 +624,7 @@ public class CloudAnchorManager : MonoBehaviour
                 if (!string.IsNullOrEmpty(audio))
                 {
                     aPath = audio;
+                    postByte = File.ReadAllBytes(audio);
                 }
             });
         }
@@ -497,7 +648,24 @@ public class CloudAnchorManager : MonoBehaviour
             audioSource.volume = 1.0f;
         }
     }
-    IEnumerator LoadAudio2(string audioPath)
+    IEnumerator LoadAudio2(string url)
+    {
+        UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("http://34.64.197.160:8000" + url, AudioType.MPEG);
+        yield return www.SendWebRequest();
+
+        if (www.result == UnityWebRequest.Result.Success)
+        {
+            AudioClip audioClip = DownloadHandlerAudioClip.GetContent(www);
+            aSource.clip = audioClip;
+            aSource.Play();
+        }
+        else
+        {
+            messageText.text = "Failed to download audio: " + www.error;
+        }
+        aSource.volume = 1.0f;
+    }
+    IEnumerator LoadAudio3(string audioPath)
     {
         using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("file://" + audioPath, AudioType.MPEG))
         {
@@ -538,42 +706,32 @@ public class CloudAnchorManager : MonoBehaviour
         img.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, x);
     }
 
-    void HostPending()
-    {
-        string mappingText = "";
-        if (cloudAnchor.cloudAnchorState == CloudAnchorState.Success)
-        {
-            PopUp_H.SetActive(true);
-            cancelButton.gameObject.SetActive(false);
-            hostButton.gameObject.SetActive(true);
-            mappingText = $"클라우드 앵커 생성 성공, CloudAnchor ID = {cloudAnchor.cloudAnchorId}";
-
-            mode = Mode.READY;
-        }
-        else
-        {
-            mappingText = $"클라우드 앵커 생성 진행중...{cloudAnchor.cloudAnchorState}";
-        }
-        messageText.text = mappingText;
-    }
-
-    IEnumerator Resolving()
+    void Resolving()
     {
         if (memoList.Count == 0)
         {
             mode = Mode.RESOLVE_PENDING;
-            yield break;
+            return;
         }
         messageText.text = "";
 
         foreach (var item in memoList)
         {
-            ARCloudAnchor anchor = anchorManager.ResolveCloudAnchorId(item.anchorID);
-            yield return new WaitUntil(() => anchor != null); // 기다림
-            cloudAnchors.Add(anchor, new Anchor() { memo = item.memo, type = item.type, nickname = item.nickname });
+            string id = item.anchorId;
+            ARCloudAnchor cloudAnchor = anchorManager.ResolveCloudAnchorId(id);
+            if (cloudAnchor != null)
+            {
+                cloudAnchors.Add(cloudAnchor, item);
+                messageText.text += cloudAnchors.Count.ToString();
+                memoList.Remove(item);
+            }
+            else
+            {
+                messageText.text += "실패";
+            }
         }
 
-        if (memoList.Count == cloudAnchors.Count)
+        if (memoList.Count == 0)
         {
             mode = Mode.RESOLVE_PENDING;
         }
@@ -584,27 +742,27 @@ public class CloudAnchorManager : MonoBehaviour
         messageText.text = "ResolvePending";
         if (cloudAnchors.Count == 0) return;
         bool allAnchorsResolved = true;
-        foreach (KeyValuePair<ARCloudAnchor, Anchor> item in cloudAnchors)
+        foreach (KeyValuePair<ARCloudAnchor, Memo> item in cloudAnchors)
         {
             if (item.Key.cloudAnchorState == CloudAnchorState.Success)
             {
                 // 객체 증강
-                if(item.Value.type == 1)
+                if (item.Value.memoType == "A")
                 {
                     textPrefab.transform.Find("nickname").GetComponent<TextMesh>().text = item.Value.nickname;
                     anchorGameObjects.Add(Instantiate(textPrefab, item.Key.transform), item.Value);
                 }
-                else if(item.Value.type == 2)
+                else if (item.Value.memoType == "B")
                 {
                     imagePrefab.transform.Find("nickname").GetComponent<TextMesh>().text = item.Value.nickname;
                     anchorGameObjects.Add(Instantiate(imagePrefab, item.Key.transform), item.Value);
                 }
-                else if(item.Value.type == 3)
+                else if (item.Value.memoType == "D")
                 {
                     videoPrefab.transform.Find("nickname").GetComponent<TextMesh>().text = item.Value.nickname;
                     anchorGameObjects.Add(Instantiate(videoPrefab, item.Key.transform), item.Value);
                 }
-                else if (item.Value.type == 4)
+                else if (item.Value.memoType == "C")
                 {
                     audioPrefab.transform.Find("nickname").GetComponent<TextMesh>().text = item.Value.nickname;
                     anchorGameObjects.Add(Instantiate(audioPrefab, item.Key.transform), item.Value);
@@ -625,6 +783,7 @@ public class CloudAnchorManager : MonoBehaviour
 
     void Checking()
     {
+        //messageText.text = "checking";
         if (Input.touchCount == 0) return;
         Touch touch = Input.GetTouch(0);
 
@@ -632,36 +791,36 @@ public class CloudAnchorManager : MonoBehaviour
         {
             Ray ray;
             RaycastHit hitobj;
-
             ray = arCamera.ScreenPointToRay(touch.position);
 
             //Ray를 통한 오브젝트 인식
             int layerMask = 1 << LayerMask.NameToLayer("Cube");
-            if (Physics.Raycast(ray, out hitobj, 500f, layerMask) && anchorGameObjects.Count > 0)
+            if (Physics.Raycast(ray, out hitobj, 500f, layerMask))
             {
-                PopUp_R.SetActive(true);
-                if (anchorGameObjects[hitobj.collider.gameObject].type == 1)
+                Memo anchor = anchorGameObjects[hitobj.collider.gameObject];
+                if (anchor.memoType == "A")
                 {
-                    MEMO.text = (string)anchorGameObjects[hitobj.collider.gameObject].memo;
+                    MEMO.text = (string)anchorGameObjects[hitobj.collider.gameObject].memo_content;
                 }
-                else if (anchorGameObjects[hitobj.collider.gameObject].type == 2)
+                else if (anchor.memoType == "B")
                 {
-                    pop_img.texture = (Texture2D)anchorGameObjects[hitobj.collider.gameObject].memo;
-                    pop_img.SetNativeSize();
-                    ImageSizeSetting(pop_img, 300, 250);
+                    if(anchor.memo_content.Contains("media/picture")) StartCoroutine(ServerImage(anchor.memo_content));
+                    else StartCoroutine(LoadImage(anchor.memo_content, pop_img));
                 }
-                else if (anchorGameObjects[hitobj.collider.gameObject].type == 3)
+                else if (anchor.memoType == "D")
                 {
                     vp.gameObject.SetActive(true);
-                    StartCoroutine(LoadVideo2((string)anchorGameObjects[hitobj.collider.gameObject].memo));
+                    if(anchor.memo_content.Contains("media/video")) StartCoroutine(LoadVideo2(anchor.memo_content));
+                    else StartCoroutine(LoadVideo3(anchor.memo_content));
                 }
-                else if (anchorGameObjects[hitobj.collider.gameObject].type == 4)
+                else if (anchor.memoType == "C")
                 {
-                    aPath = (string)anchorGameObjects[hitobj.collider.gameObject].memo;
+                    aPath = anchor.memo_content;
                     buttonRP.gameObject.SetActive(true);
                     buttonRS.gameObject.SetActive(true);
                     pop_img.gameObject.SetActive(false);
                 }
+                PopUp_R.SetActive(true);
             }
         }
     }
@@ -676,12 +835,6 @@ public class CloudAnchorManager : MonoBehaviour
     {
         mode = Mode.HOST;
     }
-
-    //private void OnResolveClick()
-    //{
-    //    //mode = Mode.RESOLVE;
-    //    //StartCoroutine(Resolving());
-    //}
 
     private void OnResetClick()
     {
@@ -699,6 +852,7 @@ public class CloudAnchorManager : MonoBehaviour
         memoList.Clear();
         cloudAnchors.Clear();
         mode = Mode.READY;
+        messageText.text = "Ready";
     }
 
     private void OnCancelClick()
