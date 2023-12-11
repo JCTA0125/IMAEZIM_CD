@@ -28,10 +28,10 @@ public class MapManager : MonoBehaviour
 
     [Header("¸Ê Á¤º¸ ¼³Á¤")]
     public string strBaseURL = "";
-    public double latitude;
-    public double longitude;
-    public double latTmp;
-    public double lngTmp;
+    static public float latitude;
+    static public float longitude;
+    public float latTmp;
+    public float lngTmp;
     //private double altitude;
     public int zoom = 14;
     public int mapWidth;
@@ -49,8 +49,8 @@ public class MapManager : MonoBehaviour
     {
         latTmp = 0;
         lngTmp = 0;
-        latitude = 0;
-        longitude = 0;
+        //latitude = 0;
+        //longitude = 0;
         maxWait = 10;
         mapRawImage = GetComponent<RawImage>();
         if (!isUpdating)

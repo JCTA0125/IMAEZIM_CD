@@ -851,7 +851,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -120, y: 50}
+  m_AnchoredPosition: {x: -120, y: 0}
   m_SizeDelta: {x: 150, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &85050637
@@ -1171,7 +1171,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 360, y: 250}
+  m_SizeDelta: {x: 400, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &160260032
 MonoBehaviour:
@@ -1402,7 +1402,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -130}
+  m_AnchoredPosition: {x: 0, y: -150}
   m_SizeDelta: {x: 150, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &190744422
@@ -1546,8 +1546,6 @@ MonoBehaviour:
   desiredAccuracyInMeters: 100
   updateDistanceInMeters: 100
   strBaseURL: https://maps.googleapis.com/maps/api/staticmap?
-  latitude: 0
-  longitude: 0
   latTmp: 0
   lngTmp: 0
   zoom: 19
@@ -3882,7 +3880,10 @@ MonoBehaviour:
   mode: 0
   anchorManager: {fileID: 388525034}
   raycastManager: {fileID: 388525033}
-  anchorPrefab: {fileID: 7414126791596113512, guid: fe573e7abb8af466791f07600c0785e3,
+  PlaneManager: {fileID: 388525032}
+  anchorPrefab: {fileID: 9172579932562624880, guid: c55a3ef136399411aa42aeaa1ad8256a,
+    type: 3}
+  MapQualityIndicatorPrefab: {fileID: 1627662587363780, guid: 91e902992b96240738192b547cbbed35,
     type: 3}
   textPrefab: {fileID: 4820767425696410413, guid: ca512ab6c57ea3e4d8b004ce7abd0146,
     type: 3}
@@ -3892,6 +3893,7 @@ MonoBehaviour:
     type: 3}
   audioPrefab: {fileID: 5374611392959825047, guid: fe1e8a1c2a0a72741a9905610beee361,
     type: 3}
+  historyList: []
   PopUp_H: {fileID: 679466681}
   PopUp_T: {fileID: 446802004}
   PopUp_I: {fileID: 2000523508}
@@ -3930,6 +3932,7 @@ MonoBehaviour:
   aSource: {fileID: 2089110260}
   arCamera: {fileID: 22732920}
   inputAddress: {fileID: 1710119735}
+  postByte: 
 --- !u!114 &921225946
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3984,8 +3987,6 @@ MonoBehaviour:
   desiredAccuracyInMeters: 0
   updateDistanceInMeters: 0
   strBaseURL: 
-  latitude: 0
-  longitude: 0
   latTmp: 0
   lngTmp: 0
   zoom: 14
@@ -4283,7 +4284,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 120, y: 50}
+  m_AnchoredPosition: {x: 120, y: 0}
   m_SizeDelta: {x: 150, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1009454327
@@ -4404,7 +4405,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -130}
+  m_AnchoredPosition: {x: 0, y: -150}
   m_SizeDelta: {x: 150, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1076467005
@@ -4658,7 +4659,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 360, y: 250}
+  m_SizeDelta: {x: 400, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1114040582
 MonoBehaviour:
@@ -4737,7 +4738,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 50}
-  m_SizeDelta: {x: 300, y: 250}
+  m_SizeDelta: {x: 400, y: 250}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1159294828
 MonoBehaviour:
@@ -5302,7 +5303,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 360, y: 250}
+  m_SizeDelta: {x: 400, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!328 &1405381448
 VideoPlayer:
@@ -5722,7 +5723,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 50}
-  m_SizeDelta: {x: 300, y: 250}
+  m_SizeDelta: {x: 400, y: 250}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1543147349
 MonoBehaviour:
@@ -6206,7 +6207,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 50}
-  m_SizeDelta: {x: 300, y: 250}
+  m_SizeDelta: {x: 400, y: 250}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!328 &1626044984
 VideoPlayer:
@@ -7001,7 +7002,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 50}
-  m_SizeDelta: {x: 300, y: 200}
+  m_SizeDelta: {x: 400, y: 250}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1828601337
 MonoBehaviour:

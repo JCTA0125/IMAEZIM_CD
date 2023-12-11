@@ -16,6 +16,7 @@ using System.IO;
 using NAudio;
 using NAudio.Wave;
 using static CloudAnchorManager;
+using Google.XR.ARCoreExtensions.Samples.PersistentCloudAnchors;
 //using static UnityEditor.Progress;
 
 public class CloudAnchorManager : MonoBehaviour
@@ -27,10 +28,14 @@ public class CloudAnchorManager : MonoBehaviour
     public Mode mode = Mode.READY;
     public ARAnchorManager anchorManager;
     public ARRaycastManager raycastManager;
+    public ARPlaneManager PlaneManager;
 
     public GameObject anchorPrefab; // 증강시킬 객체 프리팹
+    public GameObject MapQualityIndicatorPrefab;
     public GameObject textPrefab, imagePrefab, videoPrefab, audioPrefab;
     private GameObject anchorGameObject;    // 저장 객체 변수(삭제하기 위한 용도)
+    private GameObject indicatorGO;
+    private MapQualityIndicator _qualityIndicator = null;
 
     private ARAnchor localAnchor;   // 로컬앵커 저장 변수
     private ARCloudAnchor cloudAnchor;  // 클라우드 앵커 변수
@@ -117,7 +122,7 @@ public class CloudAnchorManager : MonoBehaviour
 
     void Start()
     {
-        MapManager MapInstance = new MapManager();
+        //MapManager MapInstance = new();
         myNickname = "myName";
         myId = "2";
 
@@ -145,7 +150,7 @@ public class CloudAnchorManager : MonoBehaviour
             textPrefab.transform.Find("nickname").GetComponent<TextMesh>().text = myNickname;
             anchorGameObjects.Add(Instantiate(textPrefab, cloudAnchor.transform), new Memo() { anchorId = "id", memoType = "A", nickname = myNickname, memo_content = inputT.text });
             StartCoroutine(PostMemo("A"));
-            localAnchor = null; Destroy(anchorGameObject);
+            localAnchor = null; Destroy(anchorGameObject); Destroy(indicatorGO);
             //cloudAnchor = null;
             //inputT.text = "";
             buttonTL.gameObject.SetActive(true);
@@ -173,9 +178,9 @@ public class CloudAnchorManager : MonoBehaviour
             imagePrefab.transform.Find("nickname").GetComponent<TextMesh>().text = myNickname;
             anchorGameObjects.Add(Instantiate(imagePrefab, cloudAnchor.transform), new Memo() { anchorId = "id", memoType = "B", nickname = myNickname, memo_content = iPath });
             StartCoroutine(PostMemo("B"));
-            localAnchor = null; Destroy(anchorGameObject);
+            localAnchor = null; Destroy(anchorGameObject); Destroy(indicatorGO);
             img.texture = null;
-            ImageSizeReturn(img, 300, 250);
+            ImageSizeReturn(img, 400, 250);
             buttonIL.gameObject.SetActive(true);
             buttonIC.gameObject.SetActive(false);
             mode = Mode.RESOLVE_PENDING;
@@ -202,9 +207,9 @@ public class CloudAnchorManager : MonoBehaviour
             videoPrefab.transform.Find("nickname").GetComponent<TextMesh>().text = myNickname;
             anchorGameObjects.Add(Instantiate(videoPrefab, cloudAnchor.transform), new Memo() { anchorId = "id", memoType = "D", nickname = myNickname, memo_content = vPath });
             StartCoroutine(PostMemo("D"));
-            localAnchor = null; Destroy(anchorGameObject);
+            localAnchor = null; Destroy(anchorGameObject); Destroy(indicatorGO);
             video.texture = null;
-            ImageSizeReturn(video, 300, 250);
+            ImageSizeReturn(video, 400, 250);
             buttonVL.gameObject.SetActive(true);
             buttonVC.gameObject.SetActive(false);
             videoPlayer.gameObject.SetActive(false);
@@ -232,7 +237,7 @@ public class CloudAnchorManager : MonoBehaviour
             audioPrefab.transform.Find("nickname").GetComponent<TextMesh>().text = myNickname;
             anchorGameObjects.Add(Instantiate(audioPrefab, cloudAnchor.transform), new Memo() { anchorId = "id", memoType = "C", nickname = myNickname, memo_content = aPath });
             StartCoroutine(PostMemo("C"));
-            localAnchor = null; Destroy(anchorGameObject);
+            localAnchor = null; Destroy(anchorGameObject); Destroy(indicatorGO);
             buttonAL.gameObject.SetActive(true);
             buttonAC.gameObject.SetActive(false);
             audioSource.gameObject.SetActive(false);
@@ -276,7 +281,7 @@ public class CloudAnchorManager : MonoBehaviour
             PopUp_R.SetActive(false);
             MEMO.text = "";
             pop_img.texture = null;
-            ImageSizeReturn(pop_img, 360, 250);
+            ImageSizeReturn(pop_img, 400, 300);
             buttonRP.gameObject.SetActive(false);
             buttonRS.gameObject.SetActive(false);
             pop_img.gameObject.SetActive(true);
@@ -292,8 +297,8 @@ public class CloudAnchorManager : MonoBehaviour
             string userId = myId;
             string anchorId = cloudAnchor.cloudAnchorId;
             string memoType = typem;
-            string latitude = MapInstance.latitude.ToString();
-            string longitude = MapInstance.longitude.ToString();
+            string latitude = MapManager.latitude.ToString();
+            string longitude = MapManager.longitude.ToString();
             string open = "public";
             string detailAddr = inputAddress.text;
             string input = inputT.text;
@@ -406,8 +411,14 @@ public class CloudAnchorManager : MonoBehaviour
         {
             if (raycastManager.Raycast(touch.position, hits, TrackableType.PlaneWithinPolygon)) // Raycast 발사
             {
+                ARPlane plane = PlaneManager.GetPlane(hits[0].trackableId);
+                var planeType = PlaneAlignment.HorizontalUp;
+                planeType = plane.alignment;
                 localAnchor = anchorManager.AddAnchor(hits[0].pose);    // 로컬 앵커 생성
                 anchorGameObject = Instantiate(anchorPrefab, localAnchor.transform);    // 로컬 앵커 위치에 객체 증강시키고 변수에 저장
+                indicatorGO = Instantiate(MapQualityIndicatorPrefab, localAnchor.transform);
+                _qualityIndicator = indicatorGO.GetComponent<MapQualityIndicator>();
+                _qualityIndicator.DrawIndicator(planeType, arCamera);
             }
         }
     }
@@ -415,8 +426,11 @@ public class CloudAnchorManager : MonoBehaviour
     void HostProcessing()   // 클라우드 앵커 등록
     {
         if (localAnchor == null) return;
-        FeatureMapQuality quality = anchorManager.EstimateFeatureMapQualityForHosting(GetCameraPose()); // 피쳐포인트 개수 및 퀄리티 측정
 
+        int qualityState = 2;
+        FeatureMapQuality quality = anchorManager.EstimateFeatureMapQualityForHosting(GetCameraPose()); // 피쳐포인트 개수 및 퀄리티 측정
+        qualityState = (int)quality;
+        _qualityIndicator.UpdateQualityState(qualityState);
         string mappingText = string.Format("맵핑 품질 = {0}", quality);
 
         if (quality == FeatureMapQuality.Sufficient || quality == FeatureMapQuality.Good)   // 맵핑 퀄리티가 1 이상일 때 호스팅 요청
@@ -516,7 +530,7 @@ public class CloudAnchorManager : MonoBehaviour
         }
         img.texture = texture;
         img.SetNativeSize();
-        ImageSizeSetting(img, 300, 250);
+        ImageSizeSetting(img, 400, 250);
     }
     IEnumerator ServerImage(string url)
     {
@@ -528,7 +542,7 @@ public class CloudAnchorManager : MonoBehaviour
             Texture2D texture = DownloadHandlerTexture.GetContent(www);
             pop_img.texture = texture;
             pop_img.SetNativeSize();
-            ImageSizeSetting(pop_img, 300, 250);
+            ImageSizeSetting(pop_img, 400, 300);
         }
         else
         {
@@ -564,7 +578,7 @@ public class CloudAnchorManager : MonoBehaviour
 
         video.texture = videoPlayer.texture;
         video.SetNativeSize();
-        ImageSizeSetting(video, 300, 250);
+        ImageSizeSetting(video, 400, 250);
 
         videoPlayer.Play(); // 비디오 재생
     }
@@ -589,7 +603,7 @@ public class CloudAnchorManager : MonoBehaviour
             }
             pop_img.texture = vp.texture;
             pop_img.SetNativeSize();
-            ImageSizeSetting(pop_img, 300, 250);
+            ImageSizeSetting(pop_img, 400, 300);
             vp.Play();
         }
         else
@@ -611,7 +625,7 @@ public class CloudAnchorManager : MonoBehaviour
 
         pop_img.texture = vp.texture;
         pop_img.SetNativeSize();
-        ImageSizeSetting(pop_img, 300, 250);
+        ImageSizeSetting(pop_img, 400, 300);
 
         vp.Play();
     }
@@ -841,6 +855,7 @@ public class CloudAnchorManager : MonoBehaviour
         if (anchorGameObject != null)
         {
             Destroy(anchorGameObject);
+            Destroy(indicatorGO);
         }
         foreach (var obj in anchorGameObjects.Keys)
         {
@@ -860,6 +875,7 @@ public class CloudAnchorManager : MonoBehaviour
         if (anchorGameObject != null)
         {
             Destroy(anchorGameObject);
+            Destroy(indicatorGO);
         }
         cloudAnchor = null;
         localAnchor = null;
