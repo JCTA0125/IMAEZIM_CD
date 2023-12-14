@@ -112,8 +112,18 @@ public class CloudAnchorManager : MonoBehaviour
     public RawImage pop_img;
     public VideoPlayer vp;
     public AudioSource aSource;
-    private string myNickname;
-    private string myId;
+    private string myNickname = "CodeDuck";
+    private string myId = "3";
+    public void AndUserId(string id)  //안드로이드에서 호출할 함수
+    {
+        Debug.Log("AndUserInfo 실행 id = " + id);
+        myId = id;
+    }
+    public void AndUserNick(string nickname)  //안드로이드에서 호출할 함수
+    {
+        Debug.Log("AndUserInfo 실행 nickname = " + nickname);
+        myNickname = nickname;
+    }
 
     [SerializeField] private Camera arCamera;
 
@@ -123,8 +133,8 @@ public class CloudAnchorManager : MonoBehaviour
     void Start()
     {
         //MapManager MapInstance = new();
-        myNickname = "myName";
-        myId = "2";
+        //myNickname = "CodeDuck";
+        //myId = "2";
 
         hostButton.onClick.AddListener(() => {
             cancelButton.gameObject.SetActive(true);
@@ -281,7 +291,7 @@ public class CloudAnchorManager : MonoBehaviour
             PopUp_R.SetActive(false);
             MEMO.text = "";
             pop_img.texture = null;
-            ImageSizeReturn(pop_img, 400, 300);
+            ImageSizeReturn(pop_img, 500, 400);
             buttonRP.gameObject.SetActive(false);
             buttonRS.gameObject.SetActive(false);
             pop_img.gameObject.SetActive(true);
@@ -486,7 +496,7 @@ public class CloudAnchorManager : MonoBehaviour
             });
         }
     }         
-    IEnumerator LoadImage(string imagePath, RawImage img) //이미지 로드 코루틴   
+    IEnumerator LoadImage(string imagePath, RawImage imgr) //이미지 로드 코루틴   
     {
         yield return null;
         NativeGallery.ImageProperties imageProperties = NativeGallery.GetImageProperties(imagePath);
@@ -528,9 +538,10 @@ public class CloudAnchorManager : MonoBehaviour
             rotatedTexture.Apply();
             return rotatedTexture;
         }
-        img.texture = texture;
-        img.SetNativeSize();
+        imgr.texture = texture;
+        imgr.SetNativeSize();
         ImageSizeSetting(img, 400, 250);
+        ImageSizeSetting(pop_img, 500, 400);
     }
     IEnumerator ServerImage(string url)
     {
@@ -542,7 +553,7 @@ public class CloudAnchorManager : MonoBehaviour
             Texture2D texture = DownloadHandlerTexture.GetContent(www);
             pop_img.texture = texture;
             pop_img.SetNativeSize();
-            ImageSizeSetting(pop_img, 400, 300);
+            ImageSizeSetting(pop_img, 500, 400);
         }
         else
         {
@@ -603,7 +614,7 @@ public class CloudAnchorManager : MonoBehaviour
             }
             pop_img.texture = vp.texture;
             pop_img.SetNativeSize();
-            ImageSizeSetting(pop_img, 400, 300);
+            ImageSizeSetting(pop_img, 500, 400);
             vp.Play();
         }
         else
@@ -625,7 +636,7 @@ public class CloudAnchorManager : MonoBehaviour
 
         pop_img.texture = vp.texture;
         pop_img.SetNativeSize();
-        ImageSizeSetting(pop_img, 400, 300);
+        ImageSizeSetting(pop_img, 500, 400);
 
         vp.Play();
     }
