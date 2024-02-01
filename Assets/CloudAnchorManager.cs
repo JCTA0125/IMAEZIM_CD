@@ -258,7 +258,7 @@ public class CloudAnchorManager : MonoBehaviour
             audioSource.gameObject.SetActive(true);
             if (!string.IsNullOrEmpty(aPath))
             {
-                StartCoroutine(LoadAudio(aPath));
+                StartCoroutine(LoadAudio(aPath, audioSource));
             }
         });
         buttonS.onClick.AddListener(() =>
@@ -277,7 +277,7 @@ public class CloudAnchorManager : MonoBehaviour
                 }
                 else
                 {
-                    StartCoroutine(LoadAudio3(aPath));
+                    StartCoroutine(LoadAudio(aPath, aSource));
                 }
             }
         });
@@ -341,10 +341,7 @@ public class CloudAnchorManager : MonoBehaviour
                 inputT.text = "";
                 inputAddress.text = "";
             }
-            else
-            {
-                messageText.text = "error for post";
-            }
+            else messageText.text = "error for post";
         }
 
         IEnumerator MemoInfoGet() //url 요청 코루틴
@@ -375,36 +372,28 @@ public class CloudAnchorManager : MonoBehaviour
                 //Resolving();
                 mode = Mode.RESOLVE;
             }
-            else
-            {
-                messageText.text = "ERROR";
-            }
+            else messageText.text = "ERROR";
         }
         StartCoroutine(MemoInfoGet());
     }
 
     void Update()
     {
-        if (mode == Mode.HOST)
-        {
+        if (mode == Mode.HOST) {
             Hosting();
             HostProcessing();
         }
-        if (mode == Mode.HOST_PENDING)
-        {
+        if (mode == Mode.HOST_PENDING) {
             HostPending();
         }
-        if (mode == Mode.RESOLVE)
-        {
+        if (mode == Mode.RESOLVE) {
             Resolving();
         }
-        if (mode == Mode.RESOLVE_PENDING)
-        {
+        if (mode == Mode.RESOLVE_PENDING) {
             ResolvePending();
             Checking();
         }
-        if (mode == Mode.READY)
-        {
+        if (mode == Mode.READY) {
             //messageText.text = "Ready";
             //Checking();
         }
@@ -555,43 +544,41 @@ public class CloudAnchorManager : MonoBehaviour
             pop_img.SetNativeSize();
             ImageSizeSetting(pop_img, 500, 400);
         }
-        else
-        {
-            messageText.text = "Failed to download image: " + www.error;
-        }
+        else messageText.text = "Failed to download image: " + www.error;
     }
     void getVideo()
     {
         if (!NativeGallery.IsMediaPickerBusy())
         {
-            NativeGallery.GetVideoFromGallery((video) =>
+            NativeGallery.GetVideoFromGallery((Video) =>
             {
-                if (!string.IsNullOrEmpty(video))
+                if (!string.IsNullOrEmpty(Video))
                 {
-                    vPath = video;
-                    postByte = File.ReadAllBytes(video);
-                    StartCoroutine(LoadVideo(video));
+                    vPath = Video;
+                    postByte = File.ReadAllBytes(Video);
+                    StartCoroutine(LoadVideo(Video, videoPlayer, video));
                 }
             });
         }
     }
-    IEnumerator LoadVideo(string videoPath)
+    IEnumerator LoadVideo(string videoPath, VideoPlayer vp, RawImage v)
     {
         yield return null;
 
-        videoPlayer.url = videoPath;    // 비디오 플레이어에 비디오 경로 설정
-        videoPlayer.Prepare();
+        vp.url = videoPath;    // 비디오 플레이어에 비디오 경로 설정
+        vp.Prepare();
 
-        while (!videoPlayer.isPrepared) // Prepare가 완료될 때까지 대기
+        while (!vp.isPrepared) // Prepare가 완료될 때까지 대기
         {
             yield return null;
         }
 
-        video.texture = videoPlayer.texture;
-        video.SetNativeSize();
+        v.texture = vp.texture;
+        v.SetNativeSize();
         ImageSizeSetting(video, 400, 250);
+        ImageSizeSetting(pop_img, 500, 400);
 
-        videoPlayer.Play(); // 비디오 재생
+        vp.Play(); // 비디오 재생
     }
     IEnumerator LoadVideo2(string videoURL)
     {
@@ -617,28 +604,7 @@ public class CloudAnchorManager : MonoBehaviour
             ImageSizeSetting(pop_img, 500, 400);
             vp.Play();
         }
-        else
-        {
-            messageText.text = "Failed to download video: " + www.error;
-        }
-    }
-    IEnumerator LoadVideo3(string videoPath)
-    {
-        yield return null;
-
-        vp.url = videoPath;
-        vp.Prepare();
-
-        while (!vp.isPrepared)
-        {
-            yield return null;
-        }
-
-        pop_img.texture = vp.texture;
-        pop_img.SetNativeSize();
-        ImageSizeSetting(pop_img, 500, 400);
-
-        vp.Play();
+        else messageText.text = "Failed to download video: " + www.error;
     }
     void getAudio()
     {
@@ -654,7 +620,7 @@ public class CloudAnchorManager : MonoBehaviour
             });
         }
     }
-    IEnumerator LoadAudio(string audioPath)
+    IEnumerator LoadAudio(string audioPath, AudioSource audioSource)
     {
         using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("file://" + audioPath, AudioType.MPEG))
         {
@@ -666,10 +632,7 @@ public class CloudAnchorManager : MonoBehaviour
                 audioSource.clip = audioClip;
                 audioSource.Play();
             }
-            else
-            {
-                Debug.LogError("Failed to load audio: " + www.error);
-            }
+            else Debug.LogError("Failed to load audio: " + www.error);
             audioSource.volume = 1.0f;
         }
     }
@@ -684,57 +647,30 @@ public class CloudAnchorManager : MonoBehaviour
             aSource.clip = audioClip;
             aSource.Play();
         }
-        else
-        {
-            messageText.text = "Failed to download audio: " + www.error;
-        }
+        else messageText.text = "Failed to download audio: " + www.error;
         aSource.volume = 1.0f;
     }
-    IEnumerator LoadAudio3(string audioPath)
-    {
-        using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("file://" + audioPath, AudioType.MPEG))
-        {
-            yield return www.SendWebRequest();
 
-            if (www.result == UnityWebRequest.Result.Success)
-            {
-                AudioClip audioClip = DownloadHandlerAudioClip.GetContent(www);
-                aSource.clip = audioClip;
-                aSource.Play();
-            }
-            else
-            {
-                Debug.LogError("Failed to load audio: " + www.error);
-            }
-            aSource.volume = 1.0f;
-        }
-    }
-
-    void ImageSizeSetting(RawImage img, float x, float y)
-    {
+    void ImageSizeSetting(RawImage img, float x, float y) {
         var imgX = img.rectTransform.sizeDelta.x;
         var imgY = img.rectTransform.sizeDelta.y;
-        if (x / y > imgX / imgY)
-        {
+        if (x / y > imgX / imgY) {
             img.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, y);
             img.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, imgX * (y / imgY));
         }
-        else
-        {
+        else {
             img.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, x);
             img.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, imgY * (x / imgX));
         }
     }
-    void ImageSizeReturn(RawImage img, float x, float y)
-    {
+    void ImageSizeReturn(RawImage img, float x, float y) {
         img.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, y);
         img.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, x);
     }
 
     void Resolving()
     {
-        if (memoList.Count == 0)
-        {
+        if (memoList.Count == 0) {
             mode = Mode.RESOLVE_PENDING;
             return;
         }
@@ -750,16 +686,9 @@ public class CloudAnchorManager : MonoBehaviour
                 messageText.text += cloudAnchors.Count.ToString();
                 memoList.Remove(item);
             }
-            else
-            {
-                messageText.text += "실패";
-            }
+            else messageText.text += "실패";
         }
-
-        if (memoList.Count == 0)
-        {
-            mode = Mode.RESOLVE_PENDING;
-        }
+        if (memoList.Count == 0) mode = Mode.RESOLVE_PENDING;
     }
 
     void ResolvePending()
@@ -769,8 +698,7 @@ public class CloudAnchorManager : MonoBehaviour
         bool allAnchorsResolved = true;
         foreach (KeyValuePair<ARCloudAnchor, Memo> item in cloudAnchors)
         {
-            if (item.Key.cloudAnchorState == CloudAnchorState.Success)
-            {
+            if (item.Key.cloudAnchorState == CloudAnchorState.Success) {
                 // 객체 증강
                 if (item.Value.memoType == "A")
                 {
@@ -794,16 +722,12 @@ public class CloudAnchorManager : MonoBehaviour
                 }
                 cloudAnchors.Remove(item.Key);
             }
-            else
-            {
+            else {
                 allAnchorsResolved = false;
                 messageText.text = $"리졸빙 진행 중...{item.Key.cloudAnchorState}";
             }
         }
-        if (allAnchorsResolved)
-        {
-            messageText.text = "리졸브 성공";
-        }
+        if (allAnchorsResolved) messageText.text = "리졸브 성공";
     }
 
     void Checking()
@@ -836,7 +760,7 @@ public class CloudAnchorManager : MonoBehaviour
                 {
                     vp.gameObject.SetActive(true);
                     if(anchor.memo_content.Contains("media/video")) StartCoroutine(LoadVideo2(anchor.memo_content));
-                    else StartCoroutine(LoadVideo3(anchor.memo_content));
+                    else StartCoroutine(LoadVideo(anchor.memo_content, vp, pop_img));
                 }
                 else if (anchor.memoType == "C")
                 {
@@ -851,13 +775,11 @@ public class CloudAnchorManager : MonoBehaviour
     }
 
     // MainCamera 태그로 지정된 카메라의 위치와 각도를 Pose 데이터 타입으로 반환
-    public Pose GetCameraPose()
-    {
+    public Pose GetCameraPose() {
         return new Pose(Camera.main.transform.position, Camera.main.transform.rotation);
     }
 
-    private void OnHostClick()
-    {
+    private void OnHostClick() {
         mode = Mode.HOST;
     }
 
@@ -873,10 +795,8 @@ public class CloudAnchorManager : MonoBehaviour
             Destroy(obj);
         }
         anchorGameObjects.Clear();
-        cloudAnchor = null;
-        localAnchor = null;
-        memoList.Clear();
-        cloudAnchors.Clear();
+        cloudAnchor = null; localAnchor = null;
+        memoList.Clear(); cloudAnchors.Clear();
         mode = Mode.READY;
         messageText.text = "Ready";
     }
@@ -888,8 +808,7 @@ public class CloudAnchorManager : MonoBehaviour
             Destroy(anchorGameObject);
             Destroy(indicatorGO);
         }
-        cloudAnchor = null;
-        localAnchor = null;
+        cloudAnchor = null; localAnchor = null;
         mode = Mode.RESOLVE_PENDING;
         cancelButton.gameObject.SetActive(false);
         hostButton.gameObject.SetActive(true);
