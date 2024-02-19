@@ -35,7 +35,8 @@ public class MainMenu : MonoBehaviour
 
     public void OnClickNav()
     {
-        Debug.Log("Nav Clicked");
+        SceneManager.LoadScene("GeospatialArf4");
+        //Debug.Log("Nav Clicked");
     }
 
 }
