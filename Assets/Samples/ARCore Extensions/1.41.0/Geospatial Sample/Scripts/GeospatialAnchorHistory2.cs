@@ -87,6 +87,8 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
         /// </summary>
         public Quaternion EunRotation;
 
+        public string ObjType; //3d 오브젝트 타입
+
         /// <summary>
         /// Construct a Geospatial Anchor history.
         /// </summary>
@@ -104,7 +106,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
         /// orientation.
         /// </param>
         public GeospatialAnchorHistory2(DateTime time, double latitude, double longitude,
-            double altitude, AnchorType anchorType, Quaternion eunRotation)
+            double altitude, AnchorType anchorType, Quaternion eunRotation, string objType)
         {
             SerializedTime = time.ToString();
             Latitude = latitude;
@@ -113,6 +115,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             Heading = 0.0f;
             AnchorType = anchorType;
             EunRotation = eunRotation;
+            ObjType = objType;
         }
 
         /// <summary>
@@ -132,9 +135,9 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
         /// </param>
         public GeospatialAnchorHistory2(
             double latitude, double longitude, double altitude, AnchorType anchorType,
-            Quaternion eunRotation) :
+            Quaternion eunRotation, string objType) :
             this(DateTime.Now, latitude, longitude, altitude, anchorType,
-            eunRotation)
+            eunRotation, objType)
         {
         }
 

@@ -113,6 +113,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
         /// A 3D object that presents a Geospatial Anchor.
         /// </summary>
         public GameObject GeospatialPrefab;
+        public GameObject GeospatialPrefabArrow;
 
         /// <summary>
         /// A 3D object that presents a Geospatial Terrain anchor.
@@ -244,7 +245,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
         /// <summary>
         /// The limitation of how many Geospatial Anchors can be stored in local storage.
         /// </summary>
-        private const int _storageLimit = 20;
+        private const int _storageLimit = 100;
 
         /// <summary>
         /// Accuracy threshold for orientation yaw accuracy in degrees that can be treated as
@@ -471,9 +472,62 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             }
         }
 
+        public void addHistory(double latitude, double longitude, double altitude, Quaternion eunRotation, string objType)  //_historyCollection 리스트에 history 추가
+        {
+            //Quaternion eunRotation = Quaternion.identity; // 단위 쿼터니언으로 초기화
+
+            GeospatialAnchorHistory2 history = new GeospatialAnchorHistory2(
+                   latitude, longitude, altitude,
+                   AnchorType.Geospatial, eunRotation, objType);  // Quaternion eunRotation
+            _historyCollection.Collection.Add(history);
+        }
+
+        public Quaternion arrowDirection(double startLatitude, double startLongitude, double endLatitude, double endLongitude)
+        {
+            //GPS 좌표
+            Vector3 gpsCoordinate1 = new Vector3((float)startLatitude, (float)startLongitude, 0f);
+            Vector3 gpsCoordinate2 = new Vector3((float)endLatitude, (float)endLongitude, 0f);
+
+            // 두 GPS 좌표 간의 방향 벡터 계산
+            Vector3 direction = gpsCoordinate2 - gpsCoordinate1;
+            // 방향 벡터를 Quaternion으로 변환
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+            //x, y축을  90도 회전
+            targetRotation *= Quaternion.Euler(90, 90, 0); //화살표 방향 반대면 x축 조정
+
+            return targetRotation;
+        }
+
         public void Start()
         {
             OnClearAllClicked();   //history 지우기
+            /*
+            Quaternion eunRotation = Quaternion.identity; // 단위 쿼터니언으로 초기화
+
+
+            GeospatialAnchorHistory2 history = new GeospatialAnchorHistory2(
+                   37.502897, 127.101521, 41.6366429300979,
+                   AnchorType.Geospatial, eunRotation, "point");  // Quaternion eunRotation
+            _historyCollection.Collection.Add(history);
+            */
+            double startLatitude = 37.502895;
+            double startLongitude = 127.101537;
+            double endLatitude = 37.502890;
+            double endLongitude = 127.101458;
+            Quaternion eunRotation = Quaternion.identity; // 단위 쿼터니언으로 초기화
+
+            Quaternion direction = arrowDirection(startLatitude, startLongitude, endLatitude, endLongitude); //화살표 방향
+
+            addHistory(37.502895, 127.101537, 42.01, eunRotation, "point");
+            addHistory(37.502902, 127.101494, 42.01, direction, "arrow");
+
+            //addHistory(37.502883, 127.10115, 43.01, "arrow");
+            //addHistory(37.502891, 127.101498, 43.01, "point");
+            addHistory(37.502890, 127.101458, 42.01, eunRotation, "point");
+
+
+            SaveGeospatialAnchorHistory();
         }
 
         /// <summary>
@@ -1002,8 +1056,9 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                             Pose modifiedPose = new Pose(hitResults[0].pose.position,
                                 Quaternion.LookRotation(Vector3.right, Vector3.up));
 
+                            string objType = "point";   //
                             GeospatialAnchorHistory2 history =
-                                CreateHistory(modifiedPose, _anchorType);
+                                CreateHistory(modifiedPose, _anchorType, objType);
 
                             // Anchor returned will be null, the coroutine will handle creating
                             // the anchor when the promise is done.
@@ -1012,8 +1067,9 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                     }
                     else
                     {
+                        string objType = "point";   //
                         GeospatialAnchorHistory2 history = CreateHistory(hitResults[0].pose,
-                            _anchorType);
+                            _anchorType, objType);
                         var anchor = PlaceARAnchor(history, hitResults[0].pose,
                             hitResults[0].trackableId);
                         if (anchor != null)
@@ -1035,8 +1091,9 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 position, planeHitResults, TrackableType.Planes | TrackableType.FeaturePoint);
             if (planeHitResults.Count > 0)
             {
+                string objType = "point";  //
                 GeospatialAnchorHistory2 history = CreateHistory(planeHitResults[0].pose,
-                    _anchorType);
+                    _anchorType, objType);
 
                 if (_anchorType == AnchorType.Rooftop)
                 {
@@ -1062,13 +1119,15 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             }
         }
 
-        private GeospatialAnchorHistory2 CreateHistory(Pose pose, AnchorType anchorType)
+        private GeospatialAnchorHistory2 CreateHistory(Pose pose, AnchorType anchorType, string objType)  //
         {
             GeospatialPose geospatialPose = EarthManager.Convert(pose);
 
+            Debug.Log("고도 : " + geospatialPose.Altitude);
+
             GeospatialAnchorHistory2 history = new GeospatialAnchorHistory2(
                 geospatialPose.Latitude, geospatialPose.Longitude, geospatialPose.Altitude,
-                anchorType, geospatialPose.EunRotation);
+                anchorType, geospatialPose.EunRotation, objType);
             return history;
         }
 
@@ -1164,11 +1223,36 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                     history.Latitude, history.Longitude, history.Altitude, eunRotation);
             }
 
-            if (anchor != null)
+            if (anchor != null)  
             {
+                /*
                 GameObject anchorGO = history.AnchorType == AnchorType.Geospatial ?
                     Instantiate(GeospatialPrefab, anchor.transform) :
                     Instantiate(TerrainPrefab, anchor.transform);
+                anchor.gameObject.SetActive(!terrain);
+                anchorGO.transform.parent = anchor.gameObject.transform;
+                _anchorObjects.Add(anchor.gameObject);
+                SnackBarText.text = GetDisplayStringForAnchorPlacedSuccess();
+                */
+                GameObject anchorGO;
+                if (history.ObjType == "point")
+                {
+                    Debug.Log("point");
+                    anchorGO = history.AnchorType == AnchorType.Geospatial ?
+                    Instantiate(GeospatialPrefab, anchor.transform) :
+                    Instantiate(TerrainPrefab, anchor.transform);
+                }
+                else if (history.ObjType == "arrow") //화살표 obj 놓기
+                {
+                    Debug.Log("arrow");
+
+                    anchorGO = history.AnchorType == AnchorType.Geospatial ?
+                    Instantiate(GeospatialPrefabArrow, anchor.transform) :
+                    Instantiate(TerrainPrefab, anchor.transform);
+                }
+                else { anchorGO = null; }
+
+
                 anchor.gameObject.SetActive(!terrain);
                 anchorGO.transform.parent = anchor.gameObject.transform;
                 _anchorObjects.Add(anchor.gameObject);
