@@ -499,7 +499,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             return targetRotation;
         }
 
-
+        /*
         // GPS 좌표를 담는 구조체
         public struct GPSPoint
         {
@@ -533,20 +533,23 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             //AddGPSPoint(37.50221156021388, 127.09980068807636);
             //AddGPSPoint(37.5021754534965, 127.09981179920104);
         }
+        */
 
+        public List<api.GPSPoint> gpsPoint = new();
+        public List<api.GPSPoint> gpsLine = new();
         //화살표 앵커 추가
         public void addArrowAnchor()
         {
             Quaternion direction = Quaternion.identity; // 단위 쿼터니언으로 초기화
-            getGps(); //나중에 바꿀 부분
+            //getGps(); //나중에 바꿀 부분
   
-            for (int i = 0; i < gpsPoints.Count - 1; i++)
+            for (int i = 0; i < gpsPoint.Count - 1; i++)
             {
                 Debug.Log("gpsPoint : "+i);
 
                 // i번째와 i+1번째 GPS 좌표 가져오기
-                GPSPoint startPoint = gpsPoints[i];
-                GPSPoint endPoint = gpsPoints[i + 1];
+                api.GPSPoint startPoint = gpsPoint[i];
+                api.GPSPoint endPoint = gpsPoint[i + 1];
 
                 //화살표 방향 계산
                 direction = arrowDirection(startPoint.latitude, startPoint.longitude, endPoint.latitude, endPoint.longitude);
@@ -559,24 +562,69 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
 
         public void addPointAnchor()
         {
-            for (int i = 0; i < gpsPoints.Count; i++)
+            for (int i = 0; i < gpsPoint.Count; i++)
             {
                 Quaternion eunRotation = Quaternion.identity; // 단위 쿼터니언으로 초기화
 
                 //point 앵커 추가
-                addHistory(gpsPoints[i].latitude, gpsPoints[i].longitude, 42.01, eunRotation, "point");
+                addHistory(gpsPoint[i].latitude, gpsPoint[i].longitude, 49.01, eunRotation, "point");
             }
             SaveGeospatialAnchorHistory();
         }
-        
 
-        //public NavigationAnchor navigationAnchor;
-        public void Start()
+        public void addLineAnchor()
         {
-            OnClearAllClicked();   //history 지우기 
+            Quaternion eunRotation = Quaternion.identity;
+            for (int i = 0; i < gpsLine.Count; i++)
+            {
+                addHistory(gpsLine[i].latitude, gpsLine[i].longitude, 49.01, eunRotation, "Line");
+            }
+            SaveGeospatialAnchorHistory();
+        }
+
+        private LineRenderer lineRenderer;
+        private List<GameObject> lineList = new();
+        public void LineRenderer()
+        {
+            lineRenderer = gameObject.AddComponent<LineRenderer>();
+            lineRenderer.positionCount = 0;
+            lineRenderer.startWidth = 0.5f;
+            lineRenderer.endWidth = 0.5f;
+            lineRenderer.material = new Material(Shader.Find("Standard"));
+            lineRenderer.material.color = Color.blue;
+        }
+
+        public void UpdateLine()
+        {
+            lineRenderer.positionCount = lineList.Count;
+
+            for (int i = 0; i < lineList.Count; i++)
+            {
+                lineRenderer.SetPosition(i, lineList[i].transform.position);
+            }
+        }
+
+        public void getGpsData()
+        {
+            gpsPoint = api.gpsPointList;
+            gpsLine = api.gpsLinestringList;
             addArrowAnchor();
             addPointAnchor();
-            
+            addLineAnchor();
+        }
+
+        //public NavigationAnchor navigationAnchor;
+        public api api;
+        public void Start()
+        {
+            //OnGetStartedClicked();
+            OnClearAllClicked();   //history 지우기
+            api.gpsCallback(getGpsData); //gps 리스트 저장된 후에 실행
+            //addArrowAnchor();
+            //addPointAnchor();
+            //addLineAnchor();
+            LineRenderer();
+            /*
             //화살표 방향 테스트
             double startLatitude = 37.502895;
             double startLongitude = 127.101537;
@@ -592,10 +640,9 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             //addHistory(37.502883, 127.10115, 43.01, "arrow");
             //addHistory(37.502891, 127.101498, 43.01, "point");
             addHistory(37.502890, 127.101458, 42.01, eunRotation, "point");
-            
+            */
 
-
-            SaveGeospatialAnchorHistory();
+            //SaveGeospatialAnchorHistory();
         }
 
         /// <summary>
@@ -692,6 +739,11 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
         /// </summary>
         public void Update()
         {
+            if (lineList.Count == gpsLine.Count)
+            {
+                UpdateLine();
+            }
+
             if (!_isInARView)
             {
                 return;
@@ -1318,11 +1370,16 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                     Instantiate(GeospatialPrefabArrow, anchor.transform) :
                     Instantiate(TerrainPrefab, anchor.transform);
                 }
+                else if (history.ObjType == "Line")
+                {
+                    anchorGO = null;
+                    lineList.Add(anchor.gameObject);
+                }
                 else { anchorGO = null; }
 
 
                 anchor.gameObject.SetActive(!terrain);
-                anchorGO.transform.parent = anchor.gameObject.transform;
+                if (anchorGO != null) anchorGO.transform.parent = anchor.gameObject.transform;
                 _anchorObjects.Add(anchor.gameObject);
                 SnackBarText.text = GetDisplayStringForAnchorPlacedSuccess();
             }
