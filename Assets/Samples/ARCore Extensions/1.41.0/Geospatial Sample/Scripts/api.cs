@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+//using Google.XR.ARCoreExtensions.Samples.Geospatial2;
 
 public class api : MonoBehaviour
 {
@@ -61,22 +62,48 @@ public class api : MonoBehaviour
     {
         dataCallback += callback;
     }
-    
+
+    //public GeospatialController geospatialController;
     void Start()
     {
         StartCoroutine(MakeRequest());
     }
 
+    public double startLatitude = 0.0;
+    public double startLongitude = 0.0;
+    public double memoLatitude = 0.0;
+    public double memoLongitude = 0.0;
+    //메모 위치 받아오는 함수
+    public void getMemoGps()
+    {
+        memoLatitude = 37.503051;  //안드에서 받아오게 수정
+        memoLongitude = 127.096991;
+        PlayerPrefs.SetString("memoLatitudeKey", memoLatitude.ToString());
+        PlayerPrefs.SetString("memoLongitudeKey", memoLongitude.ToString());
+    }
+    public void getStratGps()
+    {
+        startLatitude = double.Parse(PlayerPrefs.GetString("startLatitudeKey"));
+        startLongitude = double.Parse(PlayerPrefs.GetString("startLongitudeKey"));
+    }
+
     IEnumerator MakeRequest()
     {
+        getMemoGps();
+        getStratGps();
+
+        while (startLatitude == 0.0) { getStratGps(); } //출발점 gps 안정화 될때까지 대기
+
+        while (memoLatitude == 0.0) { getMemoGps(); } //메모 위치 안드에서 받아올때까지 대기
+
         string url = "https://apis.openapi.sk.com/tmap/routes/pedestrian";
 
         WWWForm form = new WWWForm();
-        form.AddField("startX", "126.92365493654832");
-        form.AddField("startY", "37.556770374096615");
+        form.AddField("startX", startLongitude.ToString()); //"126.92365493654832"
+        form.AddField("startY", startLatitude.ToString());//"37.556770374096615")
         form.AddField("speed", "4");
-        form.AddField("endX", "126.92432158129688");
-        form.AddField("endY", "37.55279861528311");
+        form.AddField("endX", memoLongitude.ToString());//"126.92432158129688"
+        form.AddField("endY", memoLatitude.ToString()); //37.55279861528311")
         form.AddField("startName", "출발");
         form.AddField("endName", "도착");
 

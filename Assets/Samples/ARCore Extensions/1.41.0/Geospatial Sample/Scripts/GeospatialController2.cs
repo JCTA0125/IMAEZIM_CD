@@ -492,9 +492,13 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             Vector3 direction = gpsCoordinate2 - gpsCoordinate1;
             // 방향 벡터를 Quaternion으로 변환
             Quaternion targetRotation = Quaternion.LookRotation(direction);
+            // y축 회전 각도만 추출
+            float yAngle = targetRotation.eulerAngles.y;
+            // y축 회전 각도만 변경
+            targetRotation = Quaternion.Euler(0f, yAngle, 90);
 
             //x, y축을  90도 회전
-            targetRotation *= Quaternion.Euler(90, 90, 0); //화살표 방향 반대면 x축 조정
+            //targetRotation *= Quaternion.Euler(90, 90, 0); //화살표 방향 반대면 x축 조정
 
             return targetRotation;
         }
@@ -534,6 +538,19 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             //AddGPSPoint(37.5021754534965, 127.09981179920104);
         }
         */
+        //출발점 위치 받아오기  
+        public double startLatitude = 0.0;  //gps 안정화 되기전까지 0.0
+        public double startLongitude = 0.0;
+        public double startAltitude = 0.0;
+        //현재 위치 -> 계속 업데이트
+        public double currentLatitude = 0.0;
+        public double currentLongitude = 0.0;
+        public double currentAltitude = 0.0;
+        //메모 위치 -> 안드에서 받아오기
+        public double memoLatitude = 0.0;
+        public double memoLongitude = 0.0;
+        //public double memoAltitude = 0.0;
+
 
         public List<api.GPSPoint> gpsPoint = new();
         public List<api.GPSPoint> gpsLine = new();
@@ -615,6 +632,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
 
         //public NavigationAnchor navigationAnchor;
         public api api;
+        public Button OutsideButton;
         public void Start()
         {
             //OnGetStartedClicked();
@@ -643,6 +661,73 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             */
 
             //SaveGeospatialAnchorHistory();
+
+            //메모 & 현재 위치 거리 확인
+            InvokeRepeating("checkMemoDistance", 0, 2.0f);  //2초마다 비교
+        }
+        //gps 거리계산
+        public static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+        {
+            double earthRadius = 6371; // 지구 반지름 (단위: 킬로미터)
+
+            // 라디안 변환
+            double lat1Rad = DegreesToRadians(lat1);
+            double lon1Rad = DegreesToRadians(lon1);
+            double lat2Rad = DegreesToRadians(lat2);
+            double lon2Rad = DegreesToRadians(lon2);
+
+            // 위도, 경도 간의 차이
+            double deltaLat = lat2Rad - lat1Rad;
+            double deltaLon = lon2Rad - lon1Rad;
+
+            // 위도, 경도 간의 거리 계산
+            double a = Math.Pow(Math.Sin(deltaLat / 2), 2) +
+                       Math.Cos(lat1Rad) * Math.Cos(lat2Rad) *
+                       Math.Pow(Math.Sin(deltaLon / 2), 2);
+            double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+            // 두 지점 간의 직선 거리 계산
+            double distance = earthRadius * c;
+
+            return distance;  //km단위
+        }
+        public static double DegreesToRadians(double degrees)
+        {
+            return degrees * Math.PI / 180;
+        }
+
+        //메모 현재 사이의 거리
+        public double memoDistance = 0.0f;
+        //메모와 현재위치 거리 계산 함수
+        void checkMemoDistance()
+        {
+            //memoLatitude = 37.524421; 
+            //memoLongitude = 127.031531;
+            memoLatitude = double.Parse(PlayerPrefs.GetString("memoLatitudeKey"));
+            memoLongitude = double.Parse(PlayerPrefs.GetString("memoLongitudeKey"));
+
+            if (memoLatitude == 0 || currentLatitude == 0)
+            {
+                OutsideButton.gameObject.SetActive(false);
+
+            }
+            else
+            {
+                memoDistance = CalculateDistance(memoLatitude, memoLongitude, currentLatitude, currentLongitude);  //거리 계산
+                Debug.Log("거리" + memoDistance);
+                //50m 안에 메모 있는지 확인
+                if (memoDistance <= 0.05)  //0.05km
+                {
+                    Debug.Log("50m 반경 내에 메모!" + memoDistance);
+                    OutsideButton.gameObject.SetActive(true);
+                    //버튼 보이게
+                }
+                else
+                {
+                    Debug.Log("50m 반경 내에 메모 없음!" + memoDistance);
+                    OutsideButton.gameObject.SetActive(false);
+                }
+            }
         }
 
         /// <summary>
@@ -652,6 +737,8 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
         {
             _startLocationService = StartLocationService();
             StartCoroutine(_startLocationService);
+
+            OutsideButton.gameObject.SetActive(false);
 
             _isReturning = false;
             _enablingGeospatial = false;
@@ -868,6 +955,16 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 AnchorSettingButton.gameObject.SetActive(true);
                 ClearAllButton.gameObject.SetActive(_anchorObjects.Count > 0);
                 SnackBarText.text = _localizationSuccessMessage;
+
+                //gps 안정화 -> 현재 위치 업데이트
+                startLatitude = pose.Latitude;
+                startLongitude = pose.Longitude;
+                startAltitude = pose.Altitude;
+                PlayerPrefs.SetString("startLatitudeKey", startLatitude.ToString());
+                PlayerPrefs.SetString("startLongitudeKey", startLongitude.ToString());
+                PlayerPrefs.SetString("startAltitudeKey", startAltitude.ToString());
+                Debug.Log("출발 위치 GPS" + startLatitude + " " + startLongitude + " " + startAltitude);
+
                 foreach (var go in _anchorObjects)
                 {
                     go.SetActive(true);
@@ -938,7 +1035,8 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 "Altitude: {4}m{0}" +
                 "Vertical Accuracy: {5}m{0}" +
                 "Eun Rotation: {6}{0}" +
-                "Orientation Yaw Accuracy: {7}°",
+                "Orientation Yaw Accuracy: {7}°{0}" +
+                "남은거리 : {8}m",
                 Environment.NewLine,
                 pose.Latitude.ToString("F6"),
                 pose.Longitude.ToString("F6"),
@@ -946,7 +1044,13 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 pose.Altitude.ToString("F2"),
                 pose.VerticalAccuracy.ToString("F2"),
                 pose.EunRotation.ToString("F1"),
-                pose.OrientationYawAccuracy.ToString("F1"));
+                pose.OrientationYawAccuracy.ToString("F1"),
+                memoDistance * 1000);
+                //현재 위치, 고도 업데이트
+                currentLatitude = pose.Latitude;
+                currentLongitude = pose.Longitude;
+                currentAltitude = pose.Altitude;
+                //Debug.Log("현재 위치 GPS" + currentLatitude + " " + currentLongitude + " " + currentAltitude);
             }
             else
             {
