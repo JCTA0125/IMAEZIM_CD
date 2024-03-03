@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.Networking;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections;
 using System.Collections.Generic;
@@ -27,6 +26,8 @@ public class api : MonoBehaviour
     // LineString의 GPS 좌표를 담는 리스트
     public List<GPSPoint> gpsLinestringList = new List<GPSPoint>();
 
+    public string tDistance = ""; //총거리
+
     // GPS 좌표를 리스트에 추가
     public void AddPointGPS(double latitude, double longitude)
     {
@@ -37,9 +38,17 @@ public class api : MonoBehaviour
     public void AddLinestringGPS(double latitude, double longitude)
     {
         GPSPoint point = new GPSPoint(latitude, longitude);
-        gpsLinestringList.Add(point);
-    }
 
+        // 리스트 내 GPS 좌표 존재유무 확인
+        if (!gpsLinestringList.Contains(point))
+        {
+            gpsLinestringList.Add(point);
+        }
+        else
+        {
+            Debug.Log("GPS already exists in the Linestring list! -> (" + latitude + ", " + longitude + ")");
+        }
+    }
     
     private Action dataCallback;
 
@@ -115,6 +124,40 @@ public class api : MonoBehaviour
                         }
                     }
                 }
+
+                // 총거리 계산
+                int totalDistances = 0;
+                foreach (JToken feature in features)
+                {
+                    // "properties" 필드가 있는지 확인
+                    if (feature["properties"] != null)
+                    {
+                        // "totalDistance" 필드가 있는지 확인
+                        if (feature["properties"]["totalDistance"] != null)
+                        {
+                            int distance = feature["properties"]["totalDistance"].Value<int>();
+                            totalDistances += distance;
+                        }
+                    }
+                }
+
+                float totalDistance = 0;
+                string unit = "";
+
+                // 총거리가 1000 이상인 경우 km(킬로미터)로
+                if (totalDistances >= 1000)
+                {
+                    totalDistance = totalDistances / 1000.0f;
+                    unit = "km";
+                }
+                // 나머지는 m(미터)로
+                else
+                {
+                    totalDistance = totalDistances;
+                    unit = "m";
+                }
+                Debug.Log("총거리 : " + totalDistance.ToString("F1") + " " + unit);
+                tDistance = "총 " + totalDistance.ToString("F1") + unit;
             }
             OnDataReceived(); //리스트 추가 후 콜백
         }
