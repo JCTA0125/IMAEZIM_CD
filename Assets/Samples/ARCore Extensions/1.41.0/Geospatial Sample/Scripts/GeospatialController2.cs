@@ -317,7 +317,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
         private bool _waitingForLocationService = false;
         private bool _isInARView = false;
         private bool _isReturning = false;
-        private bool _isLocalizing = false;
+        private bool _isLocalizing = false; 
         private bool _enablingGeospatial = false;
         private bool _shouldResolvingHistory = false;
         private float _localizationPassedTime = 0f;
@@ -475,11 +475,12 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
         public void addHistory(double latitude, double longitude, double altitude, Quaternion eunRotation, string objType)  //_historyCollection 리스트에 history 추가
         {
             //Quaternion eunRotation = Quaternion.identity; // 단위 쿼터니언으로 초기화
-
+           
             GeospatialAnchorHistory2 history = new GeospatialAnchorHistory2(
                    latitude, longitude, altitude,
                    AnchorType.Geospatial, eunRotation, objType);  // Quaternion eunRotation
             _historyCollection.Collection.Add(history);
+            Debug.Log("addHistory " + objType + "  "+ latitude + "  " + longitude);
         }
 
         public Quaternion arrowDirection(double startLatitude, double startLongitude, double endLatitude, double endLongitude)
@@ -497,8 +498,8 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             // y축 회전 각도만 변경
             targetRotation = Quaternion.Euler(0f, yAngle, 90);
 
-            //x, y축을  90도 회전
-            //targetRotation *= Quaternion.Euler(90, 90, 0); //화살표 방향 반대면 x축 조정
+            //x 회전 
+            targetRotation *= Quaternion.Euler(-90, 0, 0); //화살표 방향 반대면 x축 조정
 
             return targetRotation;
         }
@@ -560,19 +561,18 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             Quaternion direction = Quaternion.identity; // 단위 쿼터니언으로 초기화
             //getGps(); //나중에 바꿀 부분
   
-            for (int i = 0; i < gpsPoint.Count - 1; i++)
+            //for (int i = 0; i < gpsPoint.Count - 2; i++)
+            for (int i = 0; i < gpsLine.Count -2 ; i += 3)
             {
-                Debug.Log("gpsPoint : "+i);
+                //addHistory(gpsLine[i].latitude, gpsLine[i].longitude, startAltitude, eunRotation, "Line");
 
+                //Debug.Log("gpsPoint : "+i);
                 // i번째와 i+1번째 GPS 좌표 가져오기
-                api.GPSPoint startPoint = gpsPoint[i];
-                api.GPSPoint endPoint = gpsPoint[i + 1];
-
+                api.GPSPoint startPoint = gpsLine[i];
+                api.GPSPoint endPoint = gpsLine[i + 1];
                 //화살표 방향 계산
                 direction = arrowDirection(startPoint.latitude, startPoint.longitude, endPoint.latitude, endPoint.longitude);
-                //앵커 추가
-                addHistory(startPoint.latitude, startPoint.longitude, 42.01, direction, "arrow");
-
+                addHistory(startPoint.latitude, startPoint.longitude, startAltitude, direction, "arrow");
             }
             SaveGeospatialAnchorHistory();
         }
@@ -584,7 +584,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 Quaternion eunRotation = Quaternion.identity; // 단위 쿼터니언으로 초기화
 
                 //point 앵커 추가
-                addHistory(gpsPoint[i].latitude, gpsPoint[i].longitude, 49.01, eunRotation, "point");
+                addHistory(gpsPoint[i].latitude, gpsPoint[i].longitude, startAltitude, eunRotation, "point");
             }
             SaveGeospatialAnchorHistory();
         }
@@ -594,7 +594,9 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             Quaternion eunRotation = Quaternion.identity;
             for (int i = 0; i < gpsLine.Count; i++)
             {
-                addHistory(gpsLine[i].latitude, gpsLine[i].longitude, 49.01, eunRotation, "Line");
+                addHistory(gpsLine[i].latitude, gpsLine[i].longitude, startAltitude, eunRotation, "Line");
+                Debug.Log("gpsLine" + i + "번 : "+ gpsLine[i].latitude + "  " + gpsLine[i].longitude);
+
             }
             SaveGeospatialAnchorHistory();
         }
@@ -628,6 +630,11 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             addArrowAnchor();
             addPointAnchor();
             addLineAnchor();
+            foreach (var history in _historyCollection.Collection)
+            {
+                Debug.Log("getGpsData : " + history.ObjType +"  "+history.Latitude + " " + history.Longitude);
+
+            }
         }
 
         //public NavigationAnchor navigationAnchor;
@@ -1458,6 +1465,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 _anchorObjects.Add(anchor.gameObject);
                 SnackBarText.text = GetDisplayStringForAnchorPlacedSuccess();
                 */
+                Debug.Log("history : "  + history.ObjType+  " "+ history.Latitude + "  " + history.Longitude);
                 GameObject anchorGO;
                 if (history.ObjType == "point")
                 {
@@ -1505,6 +1513,8 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             _shouldResolvingHistory = false;
             foreach (var history in _historyCollection.Collection)
             {
+                Debug.Log("history2 : "  + history.ObjType+  " "+ history.Latitude + "  " + history.Longitude);
+
                 switch (history.AnchorType)
                 {
                     case AnchorType.Rooftop:
@@ -1548,8 +1558,8 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
         public void SaveGeospatialAnchorHistory()  //private
         {
             // Sort the data from latest record to earliest record.
-            _historyCollection.Collection.Sort((left, right) =>
-                right.CreatedTime.CompareTo(left.CreatedTime));
+            //_historyCollection.Collection.Sort((left, right) =>
+            //    right.CreatedTime.CompareTo(left.CreatedTime));
 
             // Remove the earliest data if the capacity exceeds storage limit.
             if (_historyCollection.Collection.Count > _storageLimit)
