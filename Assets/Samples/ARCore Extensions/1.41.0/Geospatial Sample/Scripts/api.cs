@@ -27,7 +27,8 @@ public class api : MonoBehaviour
     // LineString의 GPS 좌표를 담는 리스트
     public List<GPSPoint> gpsLinestringList = new List<GPSPoint>();
 
-    public string tDistance = ""; //총거리
+    public int tDistance = 0; //총거리
+    public int ApiResult = 1;  //"경로 정보 존재하지 않습니다" 띄우는 상황 : 0   띄우면 안되는 상황 : 1
 
     // GPS 좌표를 리스트에 추가
     public void AddPointGPS(double latitude, double longitude)
@@ -73,18 +74,37 @@ public class api : MonoBehaviour
     public double startLongitude = 0.0;
     public double memoLatitude = 0.0;
     public double memoLongitude = 0.0;
+    //안드 -> 유니티
+    public void getLatitude(string latitude)
+    {
+        Debug.Log("getLatitude 실행 latitude = " + latitude);
+        memoLatitude = double.Parse(latitude);
+        PlayerPrefs.SetString("memoLatitudeKey", latitude);
+    }
+    public void getLongitude(string longitude)
+    {
+        Debug.Log("getLongitude 실행 longitude = " + longitude);
+        memoLongitude = double.Parse(longitude);
+        PlayerPrefs.SetString("memoLongitudeKey", longitude);
+    }
+    public void getInOut(string inout)
+    {
+        Debug.Log("getInOut 실행  실내 or 실외 = " + inout);
+        PlayerPrefs.SetString("inout", inout);
+    }
+
     //메모 위치 받아오는 함수
     public void getMemoGps()
     {
-        memoLatitude = 37.651681;  //안드에서 받아오게 수정
-        memoLongitude = 127.014791;
-        PlayerPrefs.SetString("memoLatitudeKey", memoLatitude.ToString());
+        memoLatitude = 37.501192; //37.651681;  //안드에서 받아오게 수정
+        memoLongitude = 127.097448; // 127.014791;
+        PlayerPrefs.SetString("memoLatitudeKey", memoLatitude.ToString());  //나중에 주석처리
         PlayerPrefs.SetString("memoLongitudeKey", memoLongitude.ToString());
     }
     public void getStratGps()
     {
-        startLatitude = 37.653302; //double.Parse(PlayerPrefs.GetString("startLatitudeKey"));
-        startLongitude = 127.015870; //double.Parse(PlayerPrefs.GetString("startLongitudeKey"));
+        startLatitude = 37.503221; //37.653302; //double.Parse(PlayerPrefs.GetString("startLatitudeKey"));
+        startLongitude = 127.101494; //127.015870; //double.Parse(PlayerPrefs.GetString("startLongitudeKey"));
     }
 
     IEnumerator MakeRequest()
@@ -184,9 +204,15 @@ public class api : MonoBehaviour
                     unit = "m";
                 }
                 Debug.Log("총거리 : " + totalDistance.ToString("F1") + " " + unit);
-                tDistance = "총 " + totalDistance.ToString("F1") + unit;
+                tDistance = totalDistances;
             }
             OnDataReceived(); //리스트 추가 후 콜백
+
+        }
+        //한번이라도 gps 안정화 되야 여기 코드 실행, api 요청도 끝나야 실행 
+        if (tDistance == 0) //총거리 없으면 -> api 요청 못받은 상황
+        {
+            ApiResult = 0;  //"경로 존재하지 않습니다" 띄우는 상황
         }
     }
 }

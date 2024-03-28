@@ -114,7 +114,8 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
         /// </summary>
         public GameObject GeospatialPrefab;
         public GameObject GeospatialPrefabArrow;
-
+        public GameObject GeospatialPrefabGoal;
+        public Text info;
         /// <summary>
         /// A 3D object that presents a Geospatial Terrain anchor.
         /// </summary>
@@ -205,20 +206,20 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
         /// Help message shown when <see cref="AREarthManager.EarthTrackingState"/> is not tracking
         /// or the pose accuracies are beyond thresholds.
         /// </summary>
-        private const string _localizationInstructionMessage =
-            "Point your camera at buildings, stores, and signs near you.";
+        private const string _localizationInstructionMessage = "현재 위치 확인중";
+        //"Point your camera at buildings, stores, and signs near you.";
 
         /// <summary>
         /// Help message shown when location fails or hits timeout.
         /// </summary>
-        private const string _localizationFailureMessage =
-            "Localization not possible.\n" +
-            "Close and open the app to restart the session.";
+        private const string _localizationFailureMessage = "gps 정보가 없습니다";
+        //"Localization not possible.\n" +
+        //"Close and open the app to restart the session.";
 
         /// <summary>
         /// Help message shown when localization is completed.
         /// </summary>
-        private const string _localizationSuccessMessage = "Localization completed.";
+        private const string _localizationSuccessMessage = " "; //"Localization completed.";
 
         /// <summary>
         /// The timeout period waiting for localization to be completed.
@@ -485,6 +486,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
 
         public Quaternion arrowDirection(double startLatitude, double startLongitude, double endLatitude, double endLongitude)
         {
+            /*
             //GPS 좌표
             Vector3 gpsCoordinate1 = new Vector3((float)startLatitude, (float)startLongitude, 0f);
             Vector3 gpsCoordinate2 = new Vector3((float)endLatitude, (float)endLongitude, 0f);
@@ -499,9 +501,15 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             targetRotation = Quaternion.Euler(0f, yAngle, 90);
 
             //x 회전 
-            targetRotation *= Quaternion.Euler(-90, 0, 0); //화살표 방향 반대면 x축 조정
+            targetRotation *= Quaternion.Euler(-90, 0, 90); //화살표 방향 반대면 x축 조정
 
             return targetRotation;
+            */
+            // 각도를 라디안으로 변환
+            float angle = Mathf.Atan2((float)(endLongitude - startLongitude), (float)(endLatitude - startLatitude)) * Mathf.Rad2Deg;
+            Quaternion rotation = Quaternion.Euler(0, angle, 0);
+
+            return rotation;
         }
 
         /*
@@ -562,7 +570,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             //getGps(); //나중에 바꿀 부분
   
             //for (int i = 0; i < gpsPoint.Count - 2; i++)
-            for (int i = 0; i < gpsLine.Count -2 ; i += 3)
+            for (int i = 0; i < gpsLine.Count -1 ; i += 2) //i < gpsLine.Count -2 ; i += 3)
             {
                 //addHistory(gpsLine[i].latitude, gpsLine[i].longitude, startAltitude, eunRotation, "Line");
 
@@ -572,7 +580,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 api.GPSPoint endPoint = gpsLine[i + 1];
                 //화살표 방향 계산
                 direction = arrowDirection(startPoint.latitude, startPoint.longitude, endPoint.latitude, endPoint.longitude);
-                addHistory(startPoint.latitude, startPoint.longitude, startAltitude, direction, "arrow");
+                addHistory(startPoint.latitude, startPoint.longitude, startAltitude + 1, direction, "arrow");
             }
             SaveGeospatialAnchorHistory();
         }
@@ -596,7 +604,10 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             {
                 addHistory(gpsLine[i].latitude, gpsLine[i].longitude, startAltitude, eunRotation, "Line");
                 Debug.Log("gpsLine" + i + "번 : "+ gpsLine[i].latitude + "  " + gpsLine[i].longitude);
-
+                if (i == gpsLine.Count-1)
+                {
+                    addHistory(gpsLine[i].latitude, gpsLine[i].longitude, startAltitude+1, eunRotation, "Goal");
+                }
             }
             SaveGeospatialAnchorHistory();
         }
@@ -607,8 +618,8 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
         {
             lineRenderer = gameObject.AddComponent<LineRenderer>();
             lineRenderer.positionCount = 0;
-            lineRenderer.startWidth = 0.5f;
-            lineRenderer.endWidth = 0.5f;
+            lineRenderer.startWidth = 5f;
+            lineRenderer.endWidth = 5f;
             lineRenderer.material = new Material(Shader.Find("Standard"));
             lineRenderer.material.color = Color.blue;
         }
@@ -628,7 +639,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             gpsPoint = api.gpsPointList;
             gpsLine = api.gpsLinestringList;
             addArrowAnchor();
-            addPointAnchor();
+            //addPointAnchor();
             addLineAnchor();
             foreach (var history in _historyCollection.Collection)
             {
@@ -637,40 +648,41 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             }
         }
 
+        // 크기 조절하는 함수
+        public void ScaleObject(GameObject targetObject, float scaleFactor)
+        {
+            if (targetObject != null)
+            {
+                //현재 크기를 가져옴 -> scaleFactor만큼 크기를 조절
+                Vector3 currentScale = targetObject.transform.localScale;
+                Vector3 newScale = currentScale * scaleFactor;
+                //새로운 크기로 설정
+                targetObject.transform.localScale = newScale;
+            }
+            else
+            {
+                Debug.LogError("대상 오브젝트가 설정되지 않았습니다.");
+            }
+        }
+
         //public NavigationAnchor navigationAnchor;
         public api api;
         public Button OutsideButton;
         public void Start()
         {
+            //SnackBarText.text = "현재 위치 확인 중";
             //OnGetStartedClicked();
             OnClearAllClicked();   //history 지우기
             api.gpsCallback(getGpsData); //gps 리스트 저장된 후에 실행
-            //addArrowAnchor();
-            //addPointAnchor();
-            //addLineAnchor();
             LineRenderer();
-            /*
-            //화살표 방향 테스트
-            double startLatitude = 37.502895;
-            double startLongitude = 127.101537;
-            double endLatitude = 37.502890;
-            double endLongitude = 127.101458;
-            Quaternion eunRotation = Quaternion.identity; // 단위 쿼터니언으로 초기화
-
-            Quaternion direction = arrowDirection(startLatitude, startLongitude, endLatitude, endLongitude); //화살표 방향
-
-            addHistory(37.502895, 127.101537, 42.01, eunRotation, "point");
-            addHistory(37.502902, 127.101494, 42.01, direction, "arrow");
-
-            //addHistory(37.502883, 127.10115, 43.01, "arrow");
-            //addHistory(37.502891, 127.101498, 43.01, "point");
-            addHistory(37.502890, 127.101458, 42.01, eunRotation, "point");
-            */
 
             //SaveGeospatialAnchorHistory();
 
+            //3d 오브젝트 크기 조정
+            ScaleObject(GeospatialPrefabArrow, 0.3f);
             //메모 & 현재 위치 거리 확인
             InvokeRepeating("checkMemoDistance", 0, 2.0f);  //2초마다 비교
+
         }
         //gps 거리계산
         public static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
@@ -929,7 +941,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 {
                     _isLocalizing = true;
                     _localizationPassedTime = 0f;
-                    GeometryToggle.gameObject.SetActive(false);
+                    GeometryToggle.gameObject.SetActive(false); 
                     AnchorSettingButton.gameObject.SetActive(false);
                     AnchorSettingPanel.gameObject.SetActive(false);
                     GeospatialAnchorToggle.gameObject.SetActive(false);
@@ -946,6 +958,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 {
                     Debug.LogError("Geospatial sample localization timed out.");
                     ReturnWithReason(_localizationFailureMessage);
+
                 }
                 else
                 {
@@ -958,9 +971,9 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 // Finished localization.
                 _isLocalizing = false;
                 _localizationPassedTime = 0f;
-                GeometryToggle.gameObject.SetActive(true);
-                AnchorSettingButton.gameObject.SetActive(true);
-                ClearAllButton.gameObject.SetActive(_anchorObjects.Count > 0);
+                GeometryToggle.gameObject.SetActive(false);
+                AnchorSettingButton.gameObject.SetActive(false);
+                ClearAllButton.gameObject.SetActive(false);
                 SnackBarText.text = _localizationSuccessMessage;
 
                 //gps 안정화 -> 현재 위치 업데이트
@@ -1015,7 +1028,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                     && _anchorObjects.Count < _storageLimit)
                 {
                     // Set anchor on screen tap.
-                    PlaceAnchorByScreenTap(Input.GetTouch(0).position);
+                    //PlaceAnchorByScreenTap(Input.GetTouch(0).position);
                 }
 
                 // Hide anchor settings and toggles if the storage limit has been reached.
@@ -1029,11 +1042,11 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 }
                 else
                 {
-                    AnchorSettingButton.gameObject.SetActive(true);
+                    AnchorSettingButton.gameObject.SetActive(false);
                 }
             }
 
-            InfoPanel.SetActive(true);
+            InfoPanel.SetActive(false);
             if (earthTrackingState == TrackingState.Tracking)
             {
                 InfoText.text = string.Format(
@@ -1058,6 +1071,18 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 currentLongitude = pose.Longitude;
                 currentAltitude = pose.Altitude;
                 //Debug.Log("현재 위치 GPS" + currentLatitude + " " + currentLongitude + " " + currentAltitude);
+                
+                //info.text = "";
+                if(api.tDistance == 0)
+                {
+                    if (api.ApiResult == 0) { info.text = "경로 정보가 존재하지 않습니다"; }
+                }
+                else 
+                {
+                    info.text = string.Format(
+                    "총 거리: {1}m{0}남은 거리: {2}m",
+                    Environment.NewLine, api.tDistance, (int)(memoDistance * 1000));
+                }
             }
             else
             {
@@ -1211,7 +1236,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
 
                 SnackBarText.text = GetDisplayStringForAnchorPlacedSuccess();
 
-                ClearAllButton.gameObject.SetActive(_anchorObjects.Count > 0);
+                ClearAllButton.gameObject.SetActive(false);
                 SaveGeospatialAnchorHistory();
             }
             else
@@ -1240,7 +1265,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
 
                 SnackBarText.text = GetDisplayStringForAnchorPlacedSuccess();
 
-                ClearAllButton.gameObject.SetActive(_anchorObjects.Count > 0);
+                ClearAllButton.gameObject.SetActive(false);
                 SaveGeospatialAnchorHistory();
             }
             else
@@ -1308,7 +1333,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                             _historyCollection.Collection.Add(history);
                         }
 
-                        ClearAllButton.gameObject.SetActive(_anchorObjects.Count > 0);
+                        ClearAllButton.gameObject.SetActive(false);
                         SaveGeospatialAnchorHistory();
                     }
                 }
@@ -1345,7 +1370,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                     _historyCollection.Collection.Add(history);
                 }
 
-                ClearAllButton.gameObject.SetActive(_anchorObjects.Count > 0);
+                ClearAllButton.gameObject.SetActive(false);
                 SaveGeospatialAnchorHistory();
             }
         }
@@ -1413,7 +1438,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                     {
                         _anchorObjects.Add(anchor.gameObject);
                         _historyCollection.Collection.Add(history);
-                        ClearAllButton.gameObject.SetActive(_anchorObjects.Count > 0);
+                        ClearAllButton.gameObject.SetActive(false);
                         SaveGeospatialAnchorHistory();
 
                         SnackBarText.text = GetDisplayStringForAnchorPlacedSuccess();
@@ -1487,6 +1512,12 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                     anchorGO = null;
                     lineList.Add(anchor.gameObject);
                 }
+                else if (history.ObjType == "Goal") //도착점 obj 놓기
+                {
+                    anchorGO = history.AnchorType == AnchorType.Geospatial ?
+                    Instantiate(GeospatialPrefabGoal, anchor.transform) :
+                    Instantiate(TerrainPrefab, anchor.transform);
+                }
                 else { anchorGO = null; }
 
 
@@ -1529,7 +1560,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 }
             }
 
-            ClearAllButton.gameObject.SetActive(_anchorObjects.Count > 0);
+            ClearAllButton.gameObject.SetActive(false);
             SnackBarText.text = string.Format("{0} anchor(s) set from history.",
                 _anchorObjects.Count);
         }
