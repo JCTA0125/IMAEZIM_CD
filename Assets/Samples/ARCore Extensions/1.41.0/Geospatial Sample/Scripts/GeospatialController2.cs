@@ -483,9 +483,11 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             _historyCollection.Collection.Add(history);
             Debug.Log("addHistory " + objType + "  "+ latitude + "  " + longitude);
         }
-
+        //int g_iCnt = 0;
+        //float g_fOffset = -180;
         public Quaternion arrowDirection(double startLatitude, double startLongitude, double endLatitude, double endLongitude)
         {
+            
             /*
             //GPS 좌표
             Vector3 gpsCoordinate1 = new Vector3((float)startLatitude, (float)startLongitude, 0f);
@@ -507,6 +509,24 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             */
             // 각도를 라디안으로 변환
             float angle = Mathf.Atan2((float)(endLongitude - startLongitude), (float)(endLatitude - startLatitude)) * Mathf.Rad2Deg;
+
+            if (angle > 0 && angle < 1)
+            {
+                angle = 1;
+            }
+            else if (angle < 0 && angle > -1)
+            {
+                angle = -1;
+            }
+            else { }
+            //angle = g_iCnt*(-45);
+            //if (g_iCnt == 0) angle = -1;
+            //g_iCnt++;
+           // Debug.Log("angel  Point2 : " +  angle);
+
+            // angle *= Mathf.Rad2Deg;
+
+            //Debug.Log("angel  Point2 Rad2Deg : " +  angle);
             Quaternion rotation = Quaternion.Euler(0, angle, 0);
 
             return rotation;
@@ -578,8 +598,12 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 // i번째와 i+1번째 GPS 좌표 가져오기
                 api.GPSPoint startPoint = gpsLine[i];
                 api.GPSPoint endPoint = gpsLine[i + 1];
+                Debug.Log("start Point2 : " + startPoint.latitude + " " + startPoint.longitude);
+                Debug.Log("end Point2 : " + endPoint.latitude + " " + endPoint.longitude);
+
                 //화살표 방향 계산
                 direction = arrowDirection(startPoint.latitude, startPoint.longitude, endPoint.latitude, endPoint.longitude);
+                Debug.Log("Point2 Direction : " + direction);
                 addHistory(startPoint.latitude, startPoint.longitude, startAltitude + 1, direction, "arrow");
             }
             SaveGeospatialAnchorHistory();
@@ -592,7 +616,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 Quaternion eunRotation = Quaternion.identity; // 단위 쿼터니언으로 초기화
 
                 //point 앵커 추가
-                addHistory(gpsPoint[i].latitude, gpsPoint[i].longitude, startAltitude, eunRotation, "point");
+                addHistory(gpsPoint[i].latitude, gpsPoint[i].longitude, startAltitude + 2, eunRotation, "point");
             }
             SaveGeospatialAnchorHistory();
         }
@@ -606,7 +630,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 Debug.Log("gpsLine" + i + "번 : "+ gpsLine[i].latitude + "  " + gpsLine[i].longitude);
                 if (i == gpsLine.Count-1)
                 {
-                    addHistory(gpsLine[i].latitude, gpsLine[i].longitude, startAltitude+1, eunRotation, "Goal");
+                    addHistory(gpsLine[i].latitude, gpsLine[i].longitude, startAltitude + 1, eunRotation, "Goal");
                 }
             }
             SaveGeospatialAnchorHistory();
