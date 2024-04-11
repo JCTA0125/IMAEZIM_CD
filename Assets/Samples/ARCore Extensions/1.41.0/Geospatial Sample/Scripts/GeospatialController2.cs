@@ -604,7 +604,8 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 //화살표 방향 계산
                 direction = arrowDirection(startPoint.latitude, startPoint.longitude, endPoint.latitude, endPoint.longitude);
                 Debug.Log("Point2 Direction : " + direction);
-                addHistory(startPoint.latitude, startPoint.longitude, startAltitude + 1, direction, "arrow");
+                //addHistory(startPoint.latitude, startPoint.longitude, startAltitude + 1, direction, "arrow");
+                addHistory(startPoint.latitude, startPoint.longitude, startPoint.elevation+3, direction, "arrow");
             }
             SaveGeospatialAnchorHistory();
         }
@@ -616,7 +617,8 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
                 Quaternion eunRotation = Quaternion.identity; // 단위 쿼터니언으로 초기화
 
                 //point 앵커 추가
-                addHistory(gpsPoint[i].latitude, gpsPoint[i].longitude, startAltitude + 2, eunRotation, "point");
+                //addHistory(gpsPoint[i].latitude, gpsPoint[i].longitude, startAltitude + 2, eunRotation, "point");
+                addHistory(gpsPoint[i].latitude, gpsPoint[i].longitude, gpsPoint[i].elevation, eunRotation, "point");
             }
             SaveGeospatialAnchorHistory();
         }
@@ -626,11 +628,13 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
             Quaternion eunRotation = Quaternion.identity;
             for (int i = 0; i < gpsLine.Count; i++)
             {
-                addHistory(gpsLine[i].latitude, gpsLine[i].longitude, startAltitude, eunRotation, "Line");
+                //addHistory(gpsLine[i].latitude, gpsLine[i].longitude, startAltitude, eunRotation, "Line");
+                addHistory(gpsLine[i].latitude, gpsLine[i].longitude, gpsLine[i].elevation, eunRotation, "Line");
                 Debug.Log("gpsLine" + i + "번 : "+ gpsLine[i].latitude + "  " + gpsLine[i].longitude);
                 if (i == gpsLine.Count-1)
                 {
-                    addHistory(gpsLine[i].latitude, gpsLine[i].longitude, startAltitude + 1, eunRotation, "Goal");
+                    //addHistory(gpsLine[i].latitude, gpsLine[i].longitude, startAltitude + 1, eunRotation, "Goal");
+                    addHistory(gpsLine[i].latitude, gpsLine[i].longitude, gpsLine[i].elevation+3, eunRotation, "Goal");
                 }
             }
             SaveGeospatialAnchorHistory();
@@ -1708,7 +1712,8 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial2
 
             Debug.LogFormat("VPS Availability at ({0}, {1}): {2}",
                 location.latitude, location.longitude, vpsAvailabilityPromise.Result);
-            VPSCheckCanvas.SetActive(vpsAvailabilityPromise.Result != VpsAvailability.Available);
+            //VPSCheckCanvas.SetActive(vpsAvailabilityPromise.Result != VpsAvailability.Available);
+            VPSCheckCanvas.SetActive(false);
         }
 
         private IEnumerator StartLocationService()

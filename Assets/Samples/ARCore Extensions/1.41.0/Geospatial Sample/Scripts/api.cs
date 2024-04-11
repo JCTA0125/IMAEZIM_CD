@@ -13,11 +13,13 @@ public class api : MonoBehaviour
     {
         public double latitude;
         public double longitude;
+        public double elevation;
 
-        public GPSPoint(double lat, double lon)
+        public GPSPoint(double lat, double lon, double elev)
         {
             latitude = lat;
             longitude = lon;
+            elevation = elev;
         }
     }
 
@@ -33,10 +35,10 @@ public class api : MonoBehaviour
     // GPS 좌표를 리스트에 추가
     public void AddPointGPS(double latitude, double longitude)
     {
-        GPSPoint point = new GPSPoint(latitude, longitude);
+        GPSPoint point = new GPSPoint(latitude, longitude, 40);
         gpsPointList.Add(point);
     }
-
+    /*
     public void AddLinestringGPS(double latitude, double longitude)
     {
         GPSPoint point = new GPSPoint(latitude, longitude);
@@ -51,7 +53,21 @@ public class api : MonoBehaviour
             Debug.Log("GPS already exists in the Linestring list! -> (" + latitude + ", " + longitude + ")");
         }
     }
-    
+    */
+    public void AddLinestringGPS(double latitude, double longitude, double elevation)
+    {
+        GPSPoint point = new GPSPoint(latitude, longitude, elevation);
+
+        if (!gpsLinestringList.Contains(point))
+        {
+            gpsLinestringList.Add(point);
+        }
+        else
+        {
+            Debug.Log("GPS already exists in the Linestring list! -> (" + latitude + ", " + longitude + ", " + elevation + ")");
+        }
+    }
+
     private Action dataCallback;
 
     private void OnDataReceived() //콜백 함수
@@ -96,15 +112,39 @@ public class api : MonoBehaviour
     //메모 위치 받아오는 함수
     public void getMemoGps()
     {
-        memoLatitude = 37.502457; //37.651681;  //안드에서 받아오게 수정
-        memoLongitude = 127.097359; // 127.014791;
+        memoLatitude = 37.651634; //37.651681;  //안드에서 받아오게 수정
+        memoLongitude = 127.016865; //127.014791;
         PlayerPrefs.SetString("memoLatitudeKey", memoLatitude.ToString());  //나중에 주석처리
         PlayerPrefs.SetString("memoLongitudeKey", memoLongitude.ToString());
     }
     public void getStratGps()
     {
-        startLatitude = 37.503690; //37.653302; //double.Parse(PlayerPrefs.GetString("startLatitudeKey"));
-        startLongitude = 127.103151; //127.015870; //double.Parse(PlayerPrefs.GetString("startLongitudeKey"));
+        startLatitude = 37.652387; //37.653302; //double.Parse(PlayerPrefs.GetString("startLatitudeKey"));
+        startLongitude = 127.016292; //127.015870; //double.Parse(PlayerPrefs.GetString("startLongitudeKey"));
+    }
+
+    private double GetElevationFromGoogleAPI(double latitude, double longitude)
+    {
+        string requestUrl = "https://maps.googleapis.com/maps/api/elevation/json?locations=" + latitude + "," + longitude + "&key=AIzaSyBq1hGu-4MArjhI-icv9AXDq3KOPZxGi6c";
+
+        using (UnityWebRequest www = UnityWebRequest.Get(requestUrl))
+        {
+            www.SendWebRequest();
+            while (!www.isDone) { } // 요청 완료 대기
+
+            if (www.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError("Network error: " + www.error);
+                return 0;
+            }
+            else
+            {
+                string jsonResponse = www.downloadHandler.text;
+                JObject jsonObject = JObject.Parse(jsonResponse);
+                double elevation = (double)jsonObject["results"][0]["elevation"];
+                return elevation + 22;
+            }
+        }
     }
 
     IEnumerator MakeRequest()
@@ -166,8 +206,15 @@ public class api : MonoBehaviour
                         {
                             double longitude = coordinate[0].Value<double>();
                             double latitude = coordinate[1].Value<double>();
-                            AddLinestringGPS(latitude, longitude); // LineString의 GPS 좌표를 리스트에 추가
-                            Debug.Log("LineString Point: (" + latitude + ", " + longitude + ")");
+                            // Google Elevation API로 고도 값 가져오기
+                            double elevation = GetElevationFromGoogleAPI(latitude, longitude);
+
+                            // 고도 값 포함하여 GPS 좌표를 리스트에 추가
+                            AddLinestringGPS(latitude, longitude, elevation);
+                            Debug.Log("LineString Point: (" + latitude + ", " + longitude + "), Elevation: " + elevation);
+
+                            //AddLinestringGPS(latitude, longitude); // LineString의 GPS 좌표를 리스트에 추가
+                            //Debug.Log("LineString Point: (" + latitude + ", " + longitude + ")");
                         }
                     }
                 }
