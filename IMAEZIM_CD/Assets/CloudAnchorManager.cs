@@ -380,6 +380,8 @@ public class CloudAnchorManager : MonoBehaviour
     void Update()
     {
         if (mode == Mode.HOST) {
+            //textPrefab.GetComponent<MeshCollider>().enabled = false;
+            //textPrefab.GetComponent<BoxCollider>().enabled = true;
             Hosting();
             HostProcessing();
         }
@@ -390,6 +392,8 @@ public class CloudAnchorManager : MonoBehaviour
             Resolving();
         }
         if (mode == Mode.RESOLVE_PENDING) {
+            //textPrefab.GetComponent<MeshCollider>().enabled = true;
+            //textPrefab.GetComponent<BoxCollider>().enabled = false;
             ResolvePending();
             Checking();
         }
@@ -410,14 +414,24 @@ public class CloudAnchorManager : MonoBehaviour
         {
             if (raycastManager.Raycast(touch.position, hits, TrackableType.PlaneWithinPolygon)) // Raycast 발사
             {
-                ARPlane plane = PlaneManager.GetPlane(hits[0].trackableId);
-                var planeType = PlaneAlignment.HorizontalUp;
-                planeType = plane.alignment;
-                localAnchor = anchorManager.AddAnchor(hits[0].pose);    // 로컬 앵커 생성
-                anchorGameObject = Instantiate(anchorPrefab, localAnchor.transform);    // 로컬 앵커 위치에 객체 증강시키고 변수에 저장
-                indicatorGO = Instantiate(MapQualityIndicatorPrefab, localAnchor.transform);
-                _qualityIndicator = indicatorGO.GetComponent<MapQualityIndicator>();
-                _qualityIndicator.DrawIndicator(planeType, arCamera);
+                Ray ray;
+                RaycastHit hitobj;
+                ray = arCamera.ScreenPointToRay(touch.position);
+                int layerMask = 1 << LayerMask.NameToLayer("Cube");
+                if (Physics.Raycast(ray, out hitobj, 500f, layerMask))
+                {
+                   
+                } else
+                {
+                    ARPlane plane = PlaneManager.GetPlane(hits[0].trackableId);
+                    var planeType = PlaneAlignment.HorizontalUp;
+                    planeType = plane.alignment;
+                    localAnchor = anchorManager.AddAnchor(hits[0].pose);    // 로컬 앵커 생성
+                    anchorGameObject = Instantiate(anchorPrefab, localAnchor.transform);    // 로컬 앵커 위치에 객체 증강시키고 변수에 저장
+                    indicatorGO = Instantiate(MapQualityIndicatorPrefab, localAnchor.transform);
+                    _qualityIndicator = indicatorGO.GetComponent<MapQualityIndicator>();
+                    _qualityIndicator.DrawIndicator(planeType, arCamera);
+                }
             }
         }
     }

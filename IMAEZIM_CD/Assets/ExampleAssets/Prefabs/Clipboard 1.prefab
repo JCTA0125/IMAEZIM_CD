@@ -94,6 +94,7 @@ GameObject:
   - component: {fileID: 4644180316682270213}
   - component: {fileID: 1802281011915411993}
   - component: {fileID: 4294273312918493713}
+  - component: {fileID: 6462039461902574964}
   m_Layer: 6
   m_Name: Clipboard 1
   m_TagString: Untagged
@@ -162,6 +163,27 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: da1d9f4dc2a121747a3c82d392f61812, type: 3}
+--- !u!65 &6462039461902574964
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4820767425696410413}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 0
+  serializedVersion: 3
+  m_Size: {x: 1.4843829, y: 0.21982709, z: 2.190603}
+  m_Center: {x: 0.0027778246, y: 0.039994493, z: 0.13108526}
 --- !u!1 &6508570571317336317
 GameObject:
   m_ObjectHideFlags: 0
