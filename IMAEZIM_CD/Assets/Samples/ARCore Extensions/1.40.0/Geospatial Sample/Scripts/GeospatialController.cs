@@ -118,7 +118,11 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
         public GameObject GeospatialPrefab;  //Text
         public GameObject GeospatialPrefab2;  //Image
         public GameObject GeospatialPrefab3;  //Video
-
+        public GameObject GeospatialPrefabArrow;
+        public GameObject GeospatialPrefabGoal;
+        public GameObject GeospatialPrefabArrow_game;
+        public GameObject GeospatialPrefabGoal_game;
+        public Text info;
         /// <summary>
         /// A 3D object that presents a Geospatial Terrain anchor.
         /// </summary>
@@ -129,7 +133,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
         /// </summary>
         public GameObject PrivacyPromptCanvas;
 
-        /// <summary>
+        /// <summary>ClearAllButton
         /// UI element showing VPS availability notification.
         /// </summary>
         public GameObject VPSCheckCanvas;
@@ -215,15 +219,15 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
         /// Help message shown when <see cref="AREarthManager.EarthTrackingState"/> is not tracking
         /// or the pose accuracies are beyond thresholds.
         /// </summary>
-        private const string _localizationInstructionMessage =
-            "Point your camera at buildings, stores, and signs near you.";
+        private const string _localizationInstructionMessage = "현재 위치 확인중";
+        // "Point your camera at buildings, stores, and signs near you.";
 
         /// <summary>
         /// Help message shown when location fails or hits timeout.
         /// </summary>
-        private const string _localizationFailureMessage =
-            "Localization not possible.\n" +
-            "Close and open the app to restart the session.";
+        private const string _localizationFailureMessage = "gps 정보가 없습니다";
+        //"Localization not possible.\n" +
+        //  "Close and open the app to restart the session.";
 
         /// <summary>
         /// Help message shown when localization is completed.
@@ -251,11 +255,13 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
         /// The earliest one will be deleted once it hits storage limit.
         /// </summary>
         private const string _persistentGeospatialAnchorsStorageKey = "PersistentGeospatialAnchors";
+        //길찾기
+        private const string _persistentGeospatialAnchorsStorageKey_nav = "PersistentGeospatialAnchors_nav";
 
         /// <summary>
         /// The limitation of how many Geospatial Anchors can be stored in local storage.
         /// </summary>
-        private const int _storageLimit = 100;
+        private const int _storageLimit = 200;
 
         /// <summary>
         /// Accuracy threshold for orientation yaw accuracy in degrees that can be treated as
@@ -333,10 +339,14 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
         private bool _isLocalizing = false;
         private bool _enablingGeospatial = false;
         public bool _shouldResolvingHistory = false;
+        public bool _shouldResolvingHistory_nav = false;
         private float _localizationPassedTime = 0f;
         private float _configurePrepareTime = 3f;
         public GeospatialAnchorHistoryCollection _historyCollection = null;
+        public GeospatialAnchorHistoryCollection_nav _historyCollection_nav = null;
         public List<GameObject> _anchorObjects = new List<GameObject>();
+        public List<GameObject> _anchorObjects_nav = new List<GameObject>();
+
         private IEnumerator _startLocationService = null;
         private IEnumerator _asyncCheck = null;
 
@@ -393,6 +403,27 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             SnackBarText.text = "Anchor(s) cleared!";
             ClearAllButton.gameObject.SetActive(false);
             SaveGeospatialAnchorHistory();
+        }
+
+        public void OnClearAllClicked_nav()  //길찾기
+        {
+            foreach (var anchor in _anchorObjects_nav)
+            {
+                Destroy(anchor);
+            }
+
+            _anchorObjects_nav.Clear();
+            _historyCollection_nav.Collection.Clear();
+            //SnackBarText.text = "Anchor(s) cleared!";
+            //ClearAllButton.gameObject.SetActive(false);
+            SaveGeospatialAnchorHistory_nav();
+
+            gpsLine.Clear();
+            gpsPoint.Clear();
+            lineList.Clear();
+
+            PlayerPrefs.SetString("memoLatitudeKey", "0.0");
+            PlayerPrefs.SetString("memoLongitudeKey", "0.0");
         }
 
 
@@ -499,6 +530,24 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                 Debug.LogError("Cannot find ARCoreExtensions.");
             }
         }
+        string navMode = ""; //길찾기 모드
+        public Button altitudeBtn;
+        public Button altitudeBtn_down;
+        public Button altitudeBtn_up;
+        public Button clearNavBtn;
+        public Text distanceText;
+
+        public void Start()
+        {
+            //PlayerPrefs.SetString("NavigationMode", "gameNav");  //나중에 주석 -> 게임장 찾기 버튼 클릭시 호출 
+            //PlayerPrefs.SetString("NavigationMode", "memoNav");  // -> 길찾기 기본 모드
+            navMode = PlayerPrefs.GetString("NavigationMode"); 
+
+            PlayerPrefs.SetString("startLatitudeKey", "0.0");
+            PlayerPrefs.SetString("startLongitudeKey", "0.0");
+            Debug.Log("nav : Start");
+            Start_nav();  //길찾기
+        }
 
         /// <summary>
         /// Unity's OnEnable() method.
@@ -531,6 +580,9 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
 
             LoadGeospatialAnchorHistory();
             _shouldResolvingHistory = _historyCollection.Collection.Count > 0;
+            //길찾기
+            LoadGeospatialAnchorHistory_nav();
+            _shouldResolvingHistory_nav = _historyCollection_nav.Collection.Count > 0;
 
             SwitchToARView(PlayerPrefs.HasKey(_hasDisplayedPrivacyPromptKey));
 
@@ -578,9 +630,17 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             {
                 Destroy(anchor);
             }
-
             _anchorObjects.Clear();
             SaveGeospatialAnchorHistory();
+
+            //길찾기
+            foreach (var anchor in _anchorObjects_nav)
+            {
+                Destroy(anchor);
+            }
+            _anchorObjects_nav.Clear();
+            SaveGeospatialAnchorHistory_nav();
+
 
             if (StreetscapeGeometryManager)
             {
@@ -594,6 +654,29 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
         /// </summary>
         public void Update()
         {
+            if (memoLatitude != 0.0)
+            {
+                altitudeBtn.gameObject.SetActive(true);
+                altitudeBtn_down.gameObject.SetActive(true);
+                altitudeBtn_up.gameObject.SetActive(true);
+                clearNavBtn.gameObject.SetActive(true);
+                distanceText.gameObject.SetActive(true);
+            }
+            else
+            {
+                altitudeBtn.gameObject.SetActive(false);
+                altitudeBtn_down.gameObject.SetActive(false);
+                altitudeBtn_up.gameObject.SetActive(false);
+                clearNavBtn.gameObject.SetActive(false);
+                distanceText.gameObject.SetActive(false);
+            }
+
+            //길찾기
+            if (lineList.Count == gpsLine.Count)
+            {
+                UpdateLine();
+            }
+
             if (!_isInARView)
             {
                 return;
@@ -696,6 +779,10 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                     {
                         go.SetActive(false);
                     }
+                    foreach (var go in _anchorObjects_nav)
+                    {
+                        go.SetActive(false);
+                    }
                 }
 
                 if (_localizationPassedTime > _timeoutSeconds)
@@ -718,12 +805,29 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                 AnchorSettingButton.gameObject.SetActive(true);
                 ClearAllButton.gameObject.SetActive(_anchorObjects.Count > 0);
                 SnackBarText.text = _localizationSuccessMessage;
+
+                //길찾기
+                //gps 안정화 -> 현재 위치 업데이트
+                startLatitude = pose.Latitude;
+                startLongitude = pose.Longitude;
+                startAltitude = pose.Altitude;
+                PlayerPrefs.SetString("startLatitudeKey", startLatitude.ToString());
+                PlayerPrefs.SetString("startLongitudeKey", startLongitude.ToString());
+                PlayerPrefs.SetString("startAltitudeKey", startAltitude.ToString());
+                //Debug.Log("출발 위치 GPS" + startLatitude + " " + startLongitude + " " + startAltitude);
+
                 foreach (var go in _anchorObjects)
                 {
                     go.SetActive(true);
                 }
-
                 ResolveHistory();
+
+                //길찾기
+                foreach (var go in _anchorObjects_nav)
+                {
+                    go.SetActive(true);
+                }
+                ResolveHistory_nav();
             }
             else
             {
@@ -783,20 +887,41 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             if (earthTrackingState == TrackingState.Tracking)
             {
                 InfoText.text = string.Format(
-                "Latitude/Longitude: {1}°, {2}°{0}" +  
-                "Horizontal Accuracy: {3}m{0}" +           
-                "Altitude: {4}m{0}" +                       
-                "Vertical Accuracy: {5}m{0}" +          
-                "Eun Rotation: {6}{0}" +                
-                "Orientation Yaw Accuracy: {7}°",       
+                "Latitude/Longitude: {1}°, {2}°{0}" +
+                "Horizontal Accuracy: {3}m{0}" +
+                "Altitude: {4}m{0}" +
+                "Vertical Accuracy: {5}m{0}" +
+                "Eun Rotation: {6}{0}" +
+                "Orientation Yaw Accuracy: {7}°",
                 Environment.NewLine,
-                pose.Latitude.ToString("F6"),  
+                pose.Latitude.ToString("F6"),
                 pose.Longitude.ToString("F6"),
                 pose.HorizontalAccuracy.ToString("F6"),
                 pose.Altitude.ToString("F2"),
                 pose.VerticalAccuracy.ToString("F2"),
                 pose.EunRotation.ToString("F1"),
                 pose.OrientationYawAccuracy.ToString("F1"));
+                //길찾기
+                //현재 위치, 고도 업데이트
+                currentLatitude = pose.Latitude;
+                currentLongitude = pose.Longitude;
+                currentAltitude = pose.Altitude;
+                //Debug.Log("update tDistance");
+                //Debug.Log(string.Format("총거리 update : {0}", api.tDistance));
+                //Debug.Log("총거리 : " + api.tDistance);
+                //Debug.Log("총거리 : ");
+                if (api.tDistance == 0)
+                {
+                    if (api.ApiResult == 0) {
+                        info.text = "경로 정보가 존재하지 않습니다";
+                    }
+                }
+                else
+                {
+                    info.text = string.Format(
+                    "총 거리: {1}m{0}남은 거리: {2}m",
+                    Environment.NewLine, api.tDistance, (int)(memoDistance * 1000));
+                }
             }
             else
             {
@@ -1037,18 +1162,18 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                             PlaceARAnchor(history, modifiedPose, hitResults[0].trackableId);
                         }
                     }
-                    else  
+                    else
                     {
                         GeospatialAnchorHistory history = CreateHistory(hitResults[0].pose,
                             _anchorType);
-                        
+
                         var anchor = PlaceARAnchor(history, hitResults[0].pose,      //**
                             hitResults[0].trackableId);
                         if (anchor != null)
                         {
-                            _historyCollection.Collection.Add(history);  
+                            _historyCollection.Collection.Add(history);
                         }
-                        
+
                         ClearAllButton.gameObject.SetActive(_anchorObjects.Count > 0);
                         SaveGeospatialAnchorHistory();
                     }
@@ -1078,20 +1203,20 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                     StartCoroutine(CheckRooftopPromise(rooftopPromise, history));
                     return;
                 }
-                               //수정할 부분 -> 화면 클릭시 이부분 호출됨
-                var anchor = PlaceGeospatialAnchor(history);    //**   //새로 만든 obj 띄우기
+                //수정할 부분 -> 화면 클릭시 이부분 호출됨
+                var anchor = PlaceGeospatialAnchor(history);       //새로 만든 obj 띄우기
                 if (anchor != null)
                 {
                     _historyCollection.Collection.Add(history);
                 }
-                
+
                 ClearAllButton.gameObject.SetActive(_anchorObjects.Count > 0);
                 SaveGeospatialAnchorHistory();
             }
         }
 
 
-        private GeospatialAnchorHistory CreateHistory(Pose pose, AnchorType anchorType)  //저장하는 부분 //수정할 부분**********
+        private GeospatialAnchorHistory CreateHistory(Pose pose, AnchorType anchorType)
         {
             GeospatialPose geospatialPose = EarthManager.Convert(pose);
             string memoType = PlayerPrefs.GetString("MemoType"); // 추가
@@ -1099,7 +1224,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             //string userId = AndUserId;//"111@111.com"; //일단 user id
             string userId = "222@222.com";
             //string writer = UserNickName;
-            string writer = "Oda"; 
+            string writer = "Oda";
             int postId = 0;         //일단 0으로  //서버 만들어지면 수정 -> postId가 저장되려면 새로 만든 앵커가 생기면 다시 다 불러오는 방법이 필요함
             string text = null;
             byte[] picture = null; //for server
@@ -1139,12 +1264,12 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             GeospatialAnchorHistory history = new GeospatialAnchorHistory(
                     geospatialPose.Latitude, geospatialPose.Longitude, geospatialPose.Altitude,
                     anchorType, geospatialPose.EunRotation, memoType, writer, postId, text, pictureurl, videourl, picture, video); //memoType 추가
-                                                                                                                   //picture이 url이 됨.
-                    Debug.Log($"Geo : ancor Text: {history.Text}, Picture: {history.Picture}, Video: {history.Video}, MemoType: {history.MemoType}, PostId: {history.PostId}");
-                    //geo는 memoType, server는 memoTypeforServer
+                                                                                                                                   //picture이 url이 됨.
+            Debug.Log($"Geo : ancor Text: {history.Text}, Picture: {history.Picture}, Video: {history.Video}, MemoType: {history.MemoType}, PostId: {history.PostId}");
+            //geo는 memoType, server는 memoTypeforServer
 
 
-      
+
             return history;
             /*
             async void delay()
@@ -1191,19 +1316,15 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                 if (www.error == null)
                 {
                     Debug.Log(www.downloadHandler.text);
-                   /*
-                    if (memoType == "Picture")
-                    {
-                        yield return StartCoroutine(GetImageURL());
-                    } //사진은 url 이 아닌 byte
-                    else if (memoType == "Video")
-                    {   yield return StartCoroutine(GetVideoURL()); }
-                    
-                    */
-                    
+                    /*
+                     if (memoType == "Picture")
+                     {
+                         yield return StartCoroutine(GetImageURL());
+                     } //사진은 url 이 아닌 byte
+                     else if (memoType == "Video")
+                     {   yield return StartCoroutine(GetVideoURL()); }
 
-
-
+                     */
                 }
                 else
                 {
@@ -1211,89 +1332,89 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                 }
 
             }
-            
-                /*
-            IEnumerator GetPostId()
-            {
 
-                    string url = "http://34.64.197.160:8000/outside/get_last_Postid/" + UnityWebRequest.EscapeURL(userId) + "/";
+            /*
+        IEnumerator GetPostId()
+        {
 
-                    UnityWebRequest www = UnityWebRequest.Get(url);
+                string url = "http://34.64.197.160:8000/outside/get_last_Postid/" + UnityWebRequest.EscapeURL(userId) + "/";
 
-                    yield return www.SendWebRequest();
+                UnityWebRequest www = UnityWebRequest.Get(url);
 
-                    if (www.error == null)
-                    {
-                        string jsonResponse = www.downloadHandler.text;
-                        ResponseId ResponseId = JsonUtility.FromJson<ResponseId>(jsonResponse);
-                        postId = ResponseId.id;
-                        Debug.Log("PostId 성공!"+postId);
+                yield return www.SendWebRequest();
 
-                    }
-                    else
-                    {
-                        Debug.Log("PostId 오류");
-                    }
-
-            }
-
-
-            IEnumerator GetImageURL() //url 를 가져오는 코드
-            {
-
-                // string userId = "1"; //id 받아오면 변경s
-
-                //user id 를 안전한 url 형태로 변형
-                string url = "http://34.64.197.160:8000/outside/get_last_Image/" + UnityWebRequest.EscapeURL(userId) + "/";
-
-                UnityWebRequest www = UnityWebRequest.Get(url); // get 방식으로 요청을 보냄.
-
-                yield return www.SendWebRequest(); //응답이 올 때까지 기다림.
-
-                if (www.error == null) //잘 도착했으면
+                if (www.error == null)
                 {
                     string jsonResponse = www.downloadHandler.text;
-                    ResponseImage ResponseImage = JsonUtility.FromJson<ResponseImage>(jsonResponse);
-                    pictureurl = ResponseImage.picture;
-                    Debug.Log("pictureur 성공!" + pictureurl);
+                    ResponseId ResponseId = JsonUtility.FromJson<ResponseId>(jsonResponse);
+                    postId = ResponseId.id;
+                    Debug.Log("PostId 성공!"+postId);
 
                 }
                 else
                 {
-                    Debug.Log("pictureur_error");
-
+                    Debug.Log("PostId 오류");
                 }
 
-            }
-            IEnumerator GetVideoURL() //url 를 가져오는 코드
+        }
+
+
+        IEnumerator GetImageURL() //url 를 가져오는 코드
+        {
+
+            // string userId = "1"; //id 받아오면 변경s
+
+            //user id 를 안전한 url 형태로 변형
+            string url = "http://34.64.197.160:8000/outside/get_last_Image/" + UnityWebRequest.EscapeURL(userId) + "/";
+
+            UnityWebRequest www = UnityWebRequest.Get(url); // get 방식으로 요청을 보냄.
+
+            yield return www.SendWebRequest(); //응답이 올 때까지 기다림.
+
+            if (www.error == null) //잘 도착했으면
             {
-
-                // string userId = "1"; //id 받아오면 변경s
-
-                //user id 를 안전한 url 형태로 변형
-                string url = "http://34.64.197.160:8000/outside/get_last_Video/" + UnityWebRequest.EscapeURL(userId) + "/";
-
-                UnityWebRequest www = UnityWebRequest.Get(url); // get 방식으로 요청을 보냄.
-
-                yield return www.SendWebRequest(); //응답이 올 때까지 기다림.
-
-                if (www.error == null) //잘 도착했으면
-                {
-                    string jsonResponse = www.downloadHandler.text;
-                    ResponseVideo ResponseVideo = JsonUtility.FromJson<ResponseVideo>(jsonResponse);
-                    videourl = ResponseVideo.video;
-                    Debug.Log("videourl성공!" + videourl);
-
-
-                }
-                else
-                {
-                    Debug.Log("Getvideourl_ERROR");
-
-                }
+                string jsonResponse = www.downloadHandler.text;
+                ResponseImage ResponseImage = JsonUtility.FromJson<ResponseImage>(jsonResponse);
+                pictureurl = ResponseImage.picture;
+                Debug.Log("pictureur 성공!" + pictureurl);
 
             }
-            */
+            else
+            {
+                Debug.Log("pictureur_error");
+
+            }
+
+        }
+        IEnumerator GetVideoURL() //url 를 가져오는 코드
+        {
+
+            // string userId = "1"; //id 받아오면 변경s
+
+            //user id 를 안전한 url 형태로 변형
+            string url = "http://34.64.197.160:8000/outside/get_last_Video/" + UnityWebRequest.EscapeURL(userId) + "/";
+
+            UnityWebRequest www = UnityWebRequest.Get(url); // get 방식으로 요청을 보냄.
+
+            yield return www.SendWebRequest(); //응답이 올 때까지 기다림.
+
+            if (www.error == null) //잘 도착했으면
+            {
+                string jsonResponse = www.downloadHandler.text;
+                ResponseVideo ResponseVideo = JsonUtility.FromJson<ResponseVideo>(jsonResponse);
+                videourl = ResponseVideo.video;
+                Debug.Log("videourl성공!" + videourl);
+
+
+            }
+            else
+            {
+                Debug.Log("Getvideourl_ERROR");
+
+            }
+
+        }
+        */
         }
 
         private Quaternion CreateRotation(GeospatialAnchorHistory history)
@@ -1309,7 +1430,21 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             return eunRotation;
         }
 
-        private ARAnchor PlaceARAnchor(GeospatialAnchorHistory history, Pose pose = new Pose(),     //@
+        private Quaternion CreateRotation_nav(GeospatialAnchorHistory_nav history)  //길찾기
+        {
+            Debug.Log("nav : CreateRotation_nav");
+            Quaternion eunRotation = history.EunRotation;
+            if (eunRotation == Quaternion.identity)
+            {
+                // This history is from a previous app version and EunRotation was not used.
+                eunRotation =
+                    Quaternion.AngleAxis(180f - (float)history.Heading, Vector3.up);
+            }
+
+            return eunRotation;
+        }
+
+        private ARAnchor PlaceARAnchor(GeospatialAnchorHistory history, Pose pose = new Pose(),
             TrackableId trackableId = new TrackableId())
         {
             Quaternion eunRotation = CreateRotation(history);
@@ -1363,7 +1498,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             return anchor;
         }
 
-        private ARGeospatialAnchor PlaceGeospatialAnchor(                           //@
+        private ARGeospatialAnchor PlaceGeospatialAnchor(
             GeospatialAnchorHistory history)
         {
             bool terrain = history.AnchorType == AnchorType.Terrain;
@@ -1385,26 +1520,14 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             else
             {
                 anchor = AnchorManager.AddAnchor(
-                    history.Latitude, history.Longitude, history.Altitude + 0.2, eunRotation);  
+                    history.Latitude, history.Longitude, history.Altitude + 0.2, eunRotation);
             }
-            /*
-            #수정 전 코드
-            if (anchor != null)
-            {
-                GameObject anchorGO = history.AnchorType == AnchorType.Geospatial ?
-            	    Instantiate(GeospatialPrefab, anchor.transform):
-                    Instantiate(TerrainPrefab, anchor.transform);
-                anchor.gameObject.SetActive(!terrain);
-                anchorGO.transform.parent = anchor.gameObject.transform;
-                _anchorObjects.Add(anchor.gameObject);
-                SnackBarText.text = GetDisplayStringForAnchorPlacedSuccess();
-            }
-            */
+
             if (anchor != null)
             {
                 //DebugText.text +=  $"place ";
                 GameObject anchorGO;
-                if(history.MemoType == "Text")    //새로운 obj 만들때마다 호출되지는 않음
+                if (history.MemoType == "Text")    //새로운 obj 만들때마다 호출되지는 않음
                 {
                     Debug.Log("success text");
                     anchorGO = history.AnchorType == AnchorType.Geospatial ?
@@ -1414,20 +1537,20 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                     ARMemoSetText textObjScript = anchorGO.GetComponent<ARMemoSetText>();
                     if (textObjScript != null)
                     {
-                       // Debug.Log("text success");
+                        // Debug.Log("text success");
                         textObjScript.ReceiveData(history.Text, history.Writer);
                     }
-                    
+
                 }
                 else if (history.MemoType == "Picture")
                 {
                     anchorGO = history.AnchorType == AnchorType.Geospatial ?
                     Instantiate(GeospatialPrefab2, anchor.transform) :
                     Instantiate(TerrainPrefab, anchor.transform);
-                    
+
                     //ARMemoSetPicture 스크립트에 접근 -> 3d 오브젝트에 정보 전달
                     ARMemoSetPicture pictureObjScript = anchorGO.GetComponent<ARMemoSetPicture>();
-                    if (pictureObjScript != null) 
+                    if (pictureObjScript != null)
                     {
                         pictureObjScript.cube = anchorGO; //video에서도 살펴라~ 
                         if (history.Picturebyte != null)
@@ -1439,7 +1562,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                             pictureObjScript.ReceiveDataUrl(history.Picture, history.Writer);
                         }
                     }
-                    
+
                     //test.text = history.Picture;
                 }
                 else if (history.MemoType == "Video")
@@ -1477,17 +1600,111 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             return anchor;
         }
 
+        //private LineRenderer lineRenderer;
+        //private List<GameObject> lineList = new();
+        private ARGeospatialAnchor PlaceGeospatialAnchor_nav(      //길찾기                    
+    GeospatialAnchorHistory_nav history)
+        {
+            //Debug.Log("nav : PlaceGeospatialAnchor_nav");
+            bool terrain = history.AnchorType == AnchorType.Terrain;
+            Quaternion eunRotation = CreateRotation_nav(history);
+            ARGeospatialAnchor anchor = null;
+
+            if (terrain)
+            {
+                /*
+                // Anchor returned will be null, the coroutine will handle creating the
+                // anchor when the promise is done.
+                ResolveAnchorOnTerrainPromise promise =
+                    AnchorManager.ResolveAnchorOnTerrainAsync(
+                        history.Latitude, history.Longitude,
+                        0, eunRotation);
+
+                StartCoroutine(CheckTerrainPromise(promise, history));
+                */
+                return null;
+            }
+            else
+            {
+                anchor = AnchorManager.AddAnchor(
+                    history.Latitude, history.Longitude, history.Altitude + 0.2, eunRotation);
+            }
+
+            if (anchor != null)
+            {
+                Debug.Log("nav : PlaceGeospatialAnchor_nav anchor");
+                //DebugText.text +=  $"place ";
+                GameObject anchorGO;
+                if (history.ObjType == "point")
+                {
+                    Debug.Log("point");
+                    anchorGO = history.AnchorType == AnchorType.Geospatial ?
+                    Instantiate(GeospatialPrefab, anchor.transform) :
+                    Instantiate(TerrainPrefab, anchor.transform);
+                }
+                else if (history.ObjType == "arrow") //화살표 obj 놓기
+                {
+                    if (navMode == "gameNav")
+                    {
+                        anchorGO = history.AnchorType == AnchorType.Geospatial ?
+                        Instantiate(GeospatialPrefabArrow_game, anchor.transform) :
+                        Instantiate(TerrainPrefab, anchor.transform);
+                    }
+                    else
+                    {
+                        //Debug.Log("nav : PlaceGeospatialAnchor_nav arrow");
+                        anchorGO = history.AnchorType == AnchorType.Geospatial ?
+                        Instantiate(GeospatialPrefabArrow, anchor.transform) :
+                        Instantiate(TerrainPrefab, anchor.transform);
+                    }
+                }
+                else if (history.ObjType == "Line")
+                {
+                    anchorGO = null;
+                    lineList.Add(anchor.gameObject);
+                }
+                else if (history.ObjType == "Goal") //도착점 obj 놓기
+                {
+                    if (navMode == "gameNav")
+                    {
+                        anchorGO = history.AnchorType == AnchorType.Geospatial ?
+                        Instantiate(GeospatialPrefabGoal_game, anchor.transform) :
+                        Instantiate(TerrainPrefab, anchor.transform);
+                    }
+                    else
+                    {
+                        anchorGO = history.AnchorType == AnchorType.Geospatial ?
+                        Instantiate(GeospatialPrefabGoal, anchor.transform) :
+                        Instantiate(TerrainPrefab, anchor.transform);
+                    }
+                }
+                else { anchorGO = null; }
+
+                anchor.gameObject.SetActive(!terrain);
+                if (anchorGO != null) anchorGO.transform.parent = anchor.gameObject.transform;
+                _anchorObjects_nav.Add(anchor.gameObject);
+                SnackBarText.text = GetDisplayStringForAnchorPlacedSuccess();
+            }
+            else
+            {
+                SnackBarText.text = GetDisplayStringForAnchorPlacedFailure();
+            }
+            //Debug.Log("nav : PlaceGeospatialAnchor_nav _5");
+
+            return anchor;
+        }
+
         public void ResolveHistory()
         {
+            Debug.Log("nav : ResolveHistory");
             if (!_shouldResolvingHistory)
             {
                 return;
             }
-            DebugText.text =  $"";   //*******
 
             _shouldResolvingHistory = false;
             foreach (var history in _historyCollection.Collection)
-            { 
+            {
                 switch (history.AnchorType)
                 {
                     case AnchorType.Rooftop:
@@ -1507,6 +1724,44 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                 _anchorObjects.Count);
         }
 
+        public void ResolveHistory_nav() //길찾기
+        {
+            Debug.Log("nav : ResolveHistory_nav");
+            if (!_shouldResolvingHistory_nav)
+            {
+                Debug.Log("nav : ResolveHistory_nav if !_shouldResolvingHistory_nav");
+                return;
+            }
+
+            Debug.Log("nav2 : " + _historyCollection_nav.Collection);
+            _shouldResolvingHistory_nav = false;
+            foreach (var history in _historyCollection_nav.Collection)
+            {
+                //Debug.Log("nav : ResolveHistory_nav for");
+                switch (history.AnchorType)
+                {
+                    /*
+                    case AnchorType.Rooftop:
+                        PlaceARAnchor(history);
+                        break;
+                    case AnchorType.Terrain:
+                        PlaceARAnchor(history);
+                        break;
+                    */
+                    case AnchorType.Geospatial:
+                        Debug.Log("nav : ResolveHistory_nav case");
+                        PlaceGeospatialAnchor_nav(history);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            //ClearAllButton.gameObject.SetActive(_anchorObjects.Count > 0);
+            //SnackBarText.text = string.Format("{0} anchor(s) set from history.",
+            //     _anchorObjects.Count);
+        }
+
         private void LoadGeospatialAnchorHistory()
         {
             if (PlayerPrefs.HasKey(_persistentGeospatialAnchorsStorageKey))
@@ -1515,9 +1770,11 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                     PlayerPrefs.GetString(_persistentGeospatialAnchorsStorageKey));
 
                 // Remove all records created more than 24 hours and update stored history.
+                /*
                 DateTime current = DateTime.Now;
                 _historyCollection.Collection.RemoveAll(
                     data => current.Subtract(data.CreatedTime).Days > 0);
+                */
                 PlayerPrefs.SetString(_persistentGeospatialAnchorsStorageKey,
                     JsonUtility.ToJson(_historyCollection));
                 PlayerPrefs.Save();
@@ -1525,6 +1782,29 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             else
             {
                 _historyCollection = new GeospatialAnchorHistoryCollection();
+            }
+        }
+
+        private void LoadGeospatialAnchorHistory_nav()
+        {
+            if (PlayerPrefs.HasKey(_persistentGeospatialAnchorsStorageKey_nav))
+            {
+                _historyCollection_nav = JsonUtility.FromJson<GeospatialAnchorHistoryCollection_nav>(
+                    PlayerPrefs.GetString(_persistentGeospatialAnchorsStorageKey_nav));
+
+                // Remove all records created more than 24 hours and update stored history.
+                /*
+                DateTime current = DateTime.Now;
+                _historyCollection_nav.Collection.RemoveAll(
+                    data => current.Subtract(data.CreatedTime).Days > 0);
+                */
+                PlayerPrefs.SetString(_persistentGeospatialAnchorsStorageKey_nav,
+                    JsonUtility.ToJson(_historyCollection_nav));
+                PlayerPrefs.Save();
+            }
+            else
+            {
+                _historyCollection_nav = new GeospatialAnchorHistoryCollection_nav();
             }
         }
 
@@ -1543,6 +1823,25 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
 
             PlayerPrefs.SetString(
                 _persistentGeospatialAnchorsStorageKey, JsonUtility.ToJson(_historyCollection));
+            PlayerPrefs.Save();
+        }
+
+        public void SaveGeospatialAnchorHistory_nav()
+        {
+            //Debug.Log("nav : SaveGeospatialAnchorHistory_nav");
+            // Sort the data from latest record to earliest record.
+            //_historyCollection.Collection.Sort((left, right) =>
+            //    right.CreatedTime.CompareTo(left.CreatedTime));
+
+            // Remove the earliest data if the capacity exceeds storage limit.
+            if (_historyCollection_nav.Collection.Count > _storageLimit)
+            {
+                _historyCollection_nav.Collection.RemoveRange(
+                    _storageLimit, _historyCollection_nav.Collection.Count - _storageLimit);
+            }
+
+            PlayerPrefs.SetString(
+                _persistentGeospatialAnchorsStorageKey_nav, JsonUtility.ToJson(_historyCollection_nav));
             PlayerPrefs.Save();
         }
 
@@ -1780,7 +2079,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
         /// Generates the placed anchor failure string for the UI display.
         /// </summary>
         /// <returns> The string for the UI display for a failed anchor placement.</returns>
-         private string GetDisplayStringForAnchorPlacedFailure()
+        private string GetDisplayStringForAnchorPlacedFailure()
         {
             return string.Format(
                     "Failed to set a {0} anchor!", _anchorType);
@@ -1791,7 +2090,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
         if(_3dObjTouch == flase) return;
         */
 
-        
+
         /*
         //3d 오브젝트 터치
         void Checking()
@@ -1839,8 +2138,355 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             }
         }
         */
-        
-        
+        //길찾기
+        //출발점 위치 받아오기  
+        public double startLatitude = 0.0;  //gps 안정화 되기전까지 0.0
+        public double startLongitude = 0.0;
+        public double startAltitude = 0.0;
+        //현재 위치 -> 계속 업데이트
+        public double currentLatitude = 0.0;
+        public double currentLongitude = 0.0;
+        public double currentAltitude = 0.0;
+        //메모 위치 -> 안드에서 받아오기
+        public double memoLatitude = 0.0;
+        public double memoLongitude = 0.0;
+        //public double memoAltitude = 0.0;
 
+        public List<api.GPSPoint> gpsPoint = new();
+        public List<api.GPSPoint> gpsLine = new();
+
+        public api api;
+        public Button OutsideButton;
+        public Button NavClearButton;
+
+        public bool NavState;
+        private LineRenderer lineRenderer;
+        private List<GameObject> lineList = new();
+
+
+        public void Start_nav()
+        {
+            api = GameObject.FindObjectOfType<api>();
+            if (api == null)
+            {
+                Debug.Log("API 객체를 찾을 수 없습니다.");
+            }
+            //SnackBarText.text = "현재 위치 확인 중";
+            //OnGetStartedClicked();
+            OnClearAllClicked_nav();   //history 지우기
+            api.gpsCallback(getGpsData); //gps 리스트 저장된 후에 실행
+            LineRenderer();
+            //SaveGeospatialAnchorHistory();
+
+            //3d 오브젝트 크기 조정
+            ScaleObject(GeospatialPrefabArrow, 0.2f);
+            ScaleObject(GeospatialPrefabArrow_game, 0.2f);
+
+            //메모 & 현재 위치 거리 확인
+            InvokeRepeating("checkMemoDistance", 0, 2.0f);  //2초마다 비교
+        }
+
+        public void addHistory(double latitude, double longitude, double altitude, Quaternion eunRotation, string objType)  //_historyCollection 리스트에 history 추가
+        {
+            //Quaternion eunRotation = Quaternion.identity; // 단위 쿼터니언으로 초기화
+
+            GeospatialAnchorHistory_nav history = new GeospatialAnchorHistory_nav(
+                   latitude, longitude, altitude,
+                   AnchorType.Geospatial, eunRotation, objType);  // Quaternion eunRotation
+            _historyCollection_nav.Collection.Add(history);
+            Debug.Log("nav : addHistory " + objType + "  "+ latitude + "  " + longitude);
+        }
+
+        public Quaternion arrowDirection(double startLatitude, double startLongitude, double endLatitude, double endLongitude)
+        {
+            // 각도를 라디안으로 변환
+            float angle = Mathf.Atan2((float)(endLongitude - startLongitude), (float)(endLatitude - startLatitude)) * Mathf.Rad2Deg;
+
+            if (angle > 0 && angle < 1)
+            {
+                angle = 1;
+            }
+            else if (angle < 0 && angle > -1)
+            {
+                angle = -1;
+            }
+            else { }
+            Quaternion rotation = Quaternion.Euler(0, angle, 90);
+
+            return rotation;
+        }
+
+        //화살표 앵커 추가
+        public void addArrowAnchor()
+        {
+            Debug.Log("nav : addArrowAnchor");
+            Quaternion direction = Quaternion.identity; // 단위 쿼터니언으로 초기화
+                                                        //getGps(); //나중에 바꿀 부분
+
+            //for (int i = 0; i < gpsPoint.Count - 2; i++)
+            for (int i = 0; i < gpsLine.Count -1; i += 2) //i < gpsLine.Count -2 ; i += 3)
+            {
+                //addHistory(gpsLine[i].latitude, gpsLine[i].longitude, startAltitude, eunRotation, "Line");
+
+                //Debug.Log("gpsPoint : "+i);
+                // i번째와 i+1번째 GPS 좌표 가져오기
+                api.GPSPoint startPoint = gpsLine[i];
+                api.GPSPoint endPoint = gpsLine[i + 1];
+                Debug.Log("start Point2 : " + startPoint.latitude + " " + startPoint.longitude);
+                Debug.Log("end Point2 : " + endPoint.latitude + " " + endPoint.longitude);
+
+                //화살표 방향 계산
+                direction = arrowDirection(startPoint.latitude, startPoint.longitude, endPoint.latitude, endPoint.longitude);
+                Debug.Log("Point2 Direction : " + direction);
+                //addHistory(startPoint.latitude, startPoint.longitude, startAltitude + 1, direction, "arrow");
+                addHistory(startPoint.latitude, startPoint.longitude, startPoint.elevation+3, direction, "arrow");
+            }
+            SaveGeospatialAnchorHistory_nav();
+        }
+
+        public void addPointAnchor()
+        {
+            Debug.Log("nav : addPointAnchor");
+            for (int i = 0; i < gpsPoint.Count; i++)
+            {
+                Quaternion eunRotation = Quaternion.identity; // 단위 쿼터니언으로 초기화
+
+                //point 앵커 추가
+                //addHistory(gpsPoint[i].latitude, gpsPoint[i].longitude, startAltitude + 2, eunRotation, "point");
+                addHistory(gpsPoint[i].latitude, gpsPoint[i].longitude, gpsPoint[i].elevation, eunRotation, "point");
+            }
+            SaveGeospatialAnchorHistory_nav();
+        }
+
+        public void addLineAnchor()
+        {
+            Debug.Log("nav : addLineAnchor");
+            Quaternion eunRotation = Quaternion.identity;
+            for (int i = 0; i < gpsLine.Count; i++)
+            {
+                //addHistory(gpsLine[i].latitude, gpsLine[i].longitude, startAltitude, eunRotation, "Line");
+                addHistory(gpsLine[i].latitude, gpsLine[i].longitude, gpsLine[i].elevation, eunRotation, "Line");
+                Debug.Log("gpsLine" + i + "번 : "+ gpsLine[i].latitude + "  " + gpsLine[i].longitude);
+                if (i == gpsLine.Count-1)
+                {
+                    //addHistory(gpsLine[i].latitude, gpsLine[i].longitude, startAltitude + 1, eunRotation, "Goal");
+                    addHistory(gpsLine[i].latitude, gpsLine[i].longitude, gpsLine[i].elevation+3, eunRotation, "Goal");
+                }
+            }
+            SaveGeospatialAnchorHistory_nav();
+        }
+
+        public void LineRenderer()
+        {
+            lineRenderer = gameObject.AddComponent<LineRenderer>();
+            lineRenderer.positionCount = 0;
+            lineRenderer.startWidth = 1f;
+            lineRenderer.endWidth = 1f;
+            lineRenderer.material = new Material(Shader.Find("Standard"));
+            if (navMode == "gameNav")
+            {
+                lineRenderer.material.color = Color.green;
+            }
+            else
+            {
+                lineRenderer.material.color = Color.blue;
+            }
+        }
+
+        public void UpdateLine()
+        {
+            lineRenderer.positionCount = lineList.Count;
+
+            for (int i = 0; i < lineList.Count; i++)
+            {
+                lineRenderer.SetPosition(i, lineList[i].transform.position);
+            }
+        }
+
+        public void getGpsData()
+        {
+            //Debug.Log("nav : getGpsData");
+            gpsPoint = api.gpsPointList;
+            gpsLine = api.gpsLinestringList;
+            //Debug.Log("nav : " + gpsPoint);
+            //Debug.Log("nav : " + gpsLine);
+            addArrowAnchor();
+            //addPointAnchor();
+            addLineAnchor();
+            /*
+            foreach (var history in _historyCollection_nav.Collection)
+            {
+                Debug.Log("nav : getGpsData : " + history.ObjType +"  "+history.Latitude + " " + history.Longitude);
+
+            }
+            */
+            _shouldResolvingHistory_nav = true;
+            ResolveHistory_nav();
+        }
+
+        // 크기 조절하는 함수
+        public void ScaleObject(GameObject targetObject, float scaleFactor)
+        {
+            if (targetObject != null)
+            {
+                //현재 크기를 가져옴 -> scaleFactor만큼 크기를 조절
+                Vector3 currentScale = targetObject.transform.localScale;
+                Vector3 newScale = currentScale * scaleFactor;
+                //새로운 크기로 설정
+                targetObject.transform.localScale = newScale;
+            }
+            else
+            {
+                Debug.LogError("대상 오브젝트가 설정되지 않았습니다.");
+            }
+        }
+
+        //gps 거리계산
+        public static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+        {
+            double earthRadius = 6371; // 지구 반지름 (단위: 킬로미터)
+
+            // 라디안 변환
+            double lat1Rad = DegreesToRadians(lat1);
+            double lon1Rad = DegreesToRadians(lon1);
+            double lat2Rad = DegreesToRadians(lat2);
+            double lon2Rad = DegreesToRadians(lon2);
+
+            // 위도, 경도 간의 차이
+            double deltaLat = lat2Rad - lat1Rad;
+            double deltaLon = lon2Rad - lon1Rad;
+
+            // 위도, 경도 간의 거리 계산
+            double a = Math.Pow(Math.Sin(deltaLat / 2), 2) +
+                       Math.Cos(lat1Rad) * Math.Cos(lat2Rad) *
+                       Math.Pow(Math.Sin(deltaLon / 2), 2);
+            double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+            // 두 지점 간의 직선 거리 계산
+            double distance = earthRadius * c;
+
+            return distance;  //km단위
+        }
+        public static double DegreesToRadians(double degrees)
+        {
+            return degrees * Math.PI / 180;
+        }
+
+        //메모 현재 사이의 거리
+        public double memoDistance = 0.0f;
+        //메모와 현재위치 거리 계산 함수
+        void checkMemoDistance()
+        {
+            //memoLatitude = 37.524421; 
+            //memoLongitude = 127.031531;
+            memoLatitude = double.Parse(PlayerPrefs.GetString("memoLatitudeKey"));
+            memoLongitude = double.Parse(PlayerPrefs.GetString("memoLongitudeKey"));
+
+            if (memoLatitude == 0 || currentLatitude == 0)
+            {
+                OutsideButton.gameObject.SetActive(false);
+
+            }
+            else
+            {
+                memoDistance = CalculateDistance(memoLatitude, memoLongitude, currentLatitude, currentLongitude);  //거리 계산
+                Debug.Log("거리" + memoDistance);
+                //30m 안에 메모 있는지 확인
+                if (memoDistance <= 0.03)  //0.03km
+                {
+                    //Debug.Log("30m 반경 내에 메모!" + memoDistance);
+                    OutsideButton.gameObject.SetActive(true);
+                    //버튼 보이게
+                }
+                else
+                {
+                    //Debug.Log("30m 반경 내에 메모 없음!" + memoDistance);
+                    OutsideButton.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        //using UnityEngine.XR.ARCore;
+
+        public void AltitudeBtnClicked()
+        {
+            lineList.Clear();
+
+            for (int i = 0; i < _historyCollection_nav.Collection.Count; i++)
+            {
+                Debug.Log("nav : AltitudeBtnClicked");
+                var history = _historyCollection_nav.Collection[i];
+                if (history.ObjType == "arrow") { history.Altitude = startAltitude - 5; } 
+                else if (history.ObjType == "Line") { history.Altitude = startAltitude - 8; }
+                else if (history.ObjType == "Goal") { history.Altitude = startAltitude - 5; }
+                else { }
+                _historyCollection_nav.Collection[i] = history;
+            }
+
+            foreach (var anchor in _anchorObjects_nav)
+            {
+                Destroy(anchor);
+            }
+            _anchorObjects_nav.Clear();
+            SaveGeospatialAnchorHistory_nav();
+
+            //_shouldResolvingHistory_nav = _historyCollection_nav.Collection.Count > 0;
+            _shouldResolvingHistory_nav = true;
+            ResolveHistory_nav();
+        }
+
+        public void AltitudeBtn_down()
+        {
+            lineList.Clear();
+
+            for (int i = 0; i < _historyCollection_nav.Collection.Count; i++)
+            {
+                //Debug.Log("nav : AltitudeBtnClicked");
+                var history = _historyCollection_nav.Collection[i];
+                if (history.ObjType == "arrow") { history.Altitude = history.Altitude - 1; }
+                else if (history.ObjType == "Line") { history.Altitude = history.Altitude - 1; }
+                else if (history.ObjType == "Goal") { history.Altitude =  history.Altitude - 1; }
+                else { }
+                _historyCollection_nav.Collection[i] = history;
+            }
+
+            foreach (var anchor in _anchorObjects_nav)
+            {
+                Destroy(anchor);
+            }
+            _anchorObjects_nav.Clear();
+            SaveGeospatialAnchorHistory_nav();
+
+            //_shouldResolvingHistory_nav = _historyCollection_nav.Collection.Count > 0;
+            _shouldResolvingHistory_nav = true;
+            ResolveHistory_nav();
+        }
+
+        public void AltitudeBtn_up()
+        {
+            lineList.Clear();
+
+            for (int i = 0; i < _historyCollection_nav.Collection.Count; i++)
+            {
+                //Debug.Log("nav : AltitudeBtnClicked");
+                var history = _historyCollection_nav.Collection[i];
+                if (history.ObjType == "arrow") { history.Altitude = history.Altitude + 1; }
+                else if (history.ObjType == "Line") { history.Altitude = history.Altitude + 1; }
+                else if (history.ObjType == "Goal") { history.Altitude =  history.Altitude + 1; }
+                else { }
+                _historyCollection_nav.Collection[i] = history;
+            }
+
+            foreach (var anchor in _anchorObjects_nav)
+            {
+                Destroy(anchor);
+            }
+            _anchorObjects_nav.Clear();
+            SaveGeospatialAnchorHistory_nav();
+
+            //_shouldResolvingHistory_nav = _historyCollection_nav.Collection.Count > 0;
+            _shouldResolvingHistory_nav = true;
+            ResolveHistory_nav();
+        }
     }
 }

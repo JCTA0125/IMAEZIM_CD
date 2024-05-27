@@ -19,6 +19,8 @@ public class MainMenu : MonoBehaviour
 
     public void OnClickOutdoor()
     {
+        PlayerPrefs.SetString("memoLatitudeKey", "0.0");
+        PlayerPrefs.SetString("memoLongitudeKey", "0.0");
         SceneManager.LoadScene("Geospatial");
     }
 
@@ -33,9 +35,17 @@ public class MainMenu : MonoBehaviour
         Debug.Log("Game Clicked");
     }
 
-    public void OnClickNav()
+    public void OnClickGameNav()
     {
-        Debug.Log("Nav Clicked");
+        //PlayerPrefs.SetString("memoLatitudeKey", "0.0");
+        //PlayerPrefs.SetString("memoLongitudeKey", "0.0");  //게임장 위치
+        PlayerPrefs.SetString("NavigationMode", "gameNav");
+        SceneManager.LoadScene("Geospatial");
+    }
+
+    public void OnClickObject()
+    {
+        Debug.Log("Object Clicked");
     }
 
 }
