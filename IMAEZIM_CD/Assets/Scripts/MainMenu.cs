@@ -45,7 +45,7 @@ public class MainMenu : MonoBehaviour
 
     public void OnClickObject()
     {
-        Debug.Log("Object Clicked");
+        SceneManager.LoadScene("ObjMemoScene");
     }
 
 }
