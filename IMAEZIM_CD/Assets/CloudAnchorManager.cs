@@ -17,13 +17,14 @@ using NAudio;
 using NAudio.Wave;
 using static CloudAnchorManager;
 using Google.XR.ARCoreExtensions.Samples.PersistentCloudAnchors;
+using UnityEngine.SceneManagement;
 //using static UnityEditor.Progress;
 
 public class CloudAnchorManager : MonoBehaviour
 {
     public enum Mode { READY, HOST, HOST_PENDING, RESOLVE, RESOLVE_PENDING };   // 상태 변수
 
-    public Button hostButton, resetButton, cancelButton;  
+    public Button hostButton, resetButton, cancelButton, backButton;  
     public Text messageText;    // 메세지 출력 텍스트
     public Mode mode = Mode.READY;
     public ARAnchorManager anchorManager;
@@ -143,6 +144,10 @@ public class CloudAnchorManager : MonoBehaviour
         });
         resetButton.onClick.AddListener(() => OnResetClick());
         cancelButton.onClick.AddListener(() => OnCancelClick());
+        backButton.onClick.AddListener(() =>
+        {
+            SceneManager.LoadScene("MainTitleScene");
+        });
         buttonT.onClick.AddListener(() =>
         {
             PopUp_H.SetActive(false);
@@ -176,6 +181,8 @@ public class CloudAnchorManager : MonoBehaviour
         buttonIS.onClick.AddListener(() =>
         {
             getImage();
+            buttonIS.gameObject.SetActive(false);
+            buttonIL.gameObject.SetActive(true);
         });
         buttonIL.onClick.AddListener(() =>
         {
@@ -190,7 +197,7 @@ public class CloudAnchorManager : MonoBehaviour
             StartCoroutine(PostMemo("B"));
             localAnchor = null; Destroy(anchorGameObject); Destroy(indicatorGO);
             img.texture = null;
-            ImageSizeReturn(img, 400, 250);
+            ImageSizeReturn(img, 500, 400);
             buttonIL.gameObject.SetActive(true);
             buttonIC.gameObject.SetActive(false);
             mode = Mode.RESOLVE_PENDING;
@@ -204,6 +211,8 @@ public class CloudAnchorManager : MonoBehaviour
         buttonVS.onClick.AddListener(() =>
         {
             getVideo();
+            buttonVS.gameObject.SetActive(false);
+            buttonVL.gameObject.SetActive(true);
         });
         buttonVL.onClick.AddListener(() =>
         {
@@ -219,7 +228,7 @@ public class CloudAnchorManager : MonoBehaviour
             StartCoroutine(PostMemo("D"));
             localAnchor = null; Destroy(anchorGameObject); Destroy(indicatorGO);
             video.texture = null;
-            ImageSizeReturn(video, 400, 250);
+            ImageSizeReturn(video, 500, 400);
             buttonVL.gameObject.SetActive(true);
             buttonVC.gameObject.SetActive(false);
             videoPlayer.gameObject.SetActive(false);
@@ -234,6 +243,8 @@ public class CloudAnchorManager : MonoBehaviour
         buttonAS.onClick.AddListener(() =>
         {
             getAudio();
+            buttonAS.gameObject.SetActive(false);
+            buttonAL.gameObject.SetActive(true);
         });
         buttonAL.onClick.AddListener(() =>
         {
@@ -543,7 +554,7 @@ public class CloudAnchorManager : MonoBehaviour
         }
         imgr.texture = texture;
         imgr.SetNativeSize();
-        ImageSizeSetting(img, 400, 250);
+        ImageSizeSetting(img, 500, 400);
         ImageSizeSetting(pop_img, 500, 400);
     }
     IEnumerator ServerImage(string url)
@@ -589,7 +600,7 @@ public class CloudAnchorManager : MonoBehaviour
 
         v.texture = vp.texture;
         v.SetNativeSize();
-        ImageSizeSetting(video, 400, 250);
+        ImageSizeSetting(video, 500, 400);
         ImageSizeSetting(pop_img, 500, 400);
 
         vp.Play(); // 비디오 재생
