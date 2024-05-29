@@ -4,13 +4,14 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.Android;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ObjectMemo : MonoBehaviour
 {
     WebCamTexture camTexture;
     public RawImage cameraViewImage, capturedImage, checkImg, askImg;
-    public Button B_Check, B_Plus, B_Yes, B_No, B_Post, B_X;
+    public Button B_Check, B_Plus, B_Yes, B_No, B_Post, B_X, B_back;
     public Text messageText, scrollT;
     public GameObject P_Ask, P_Write, P_Check;
     public InputField memoText;
@@ -304,6 +305,10 @@ public class ObjectMemo : MonoBehaviour
         B_X.onClick.AddListener(() => {
             P_Check.SetActive(false);
             scrollT.text = "";
+        });
+        B_back.onClick.AddListener(() =>
+        {
+            SceneManager.LoadScene("MainTitleScene");
         });
     }
 }
