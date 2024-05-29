@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 public class TypeBtnManager : MonoBehaviour
 {
@@ -53,8 +54,10 @@ public class TypeBtnManager : MonoBehaviour
 
     }
 
+    public TMP_InputField inputText;
     public void BtnTextBack()
     {
+        PlayerPrefs.SetString("MemoText", inputText.text);
         TextPanel.SetActive(false);
     }
 

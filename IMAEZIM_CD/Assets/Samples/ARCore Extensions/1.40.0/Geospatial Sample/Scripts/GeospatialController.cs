@@ -536,6 +536,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
         public Button altitudeBtn_up;
         public Button clearNavBtn;
         public Text distanceText;
+        public GameObject navPanel;
 
         public void Start()
         {
@@ -661,6 +662,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                 altitudeBtn_up.gameObject.SetActive(true);
                 clearNavBtn.gameObject.SetActive(true);
                 distanceText.gameObject.SetActive(true);
+                navPanel.gameObject.SetActive(true);
             }
             else
             {
@@ -669,6 +671,8 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                 altitudeBtn_up.gameObject.SetActive(false);
                 clearNavBtn.gameObject.SetActive(false);
                 distanceText.gameObject.SetActive(false);
+                navPanel.gameObject.SetActive(false);
+
             }
 
             //길찾기

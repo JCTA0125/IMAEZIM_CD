@@ -48,5 +48,10 @@ public class MainMenu : MonoBehaviour
         SceneManager.LoadScene("ObjMemoScene");
     }
 
+    public void OnClickBackBtn()
+    {
+        SceneManager.LoadScene("MainTitleScene");
+    }
+
 }
 
