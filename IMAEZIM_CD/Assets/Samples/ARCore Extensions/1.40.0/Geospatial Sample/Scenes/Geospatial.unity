@@ -1861,7 +1861,7 @@ MonoBehaviour:
     type: 3}
   GeospatialPrefabArrow_game: {fileID: 919132149155446097, guid: 1f6385d225cb0c14a97c06c21b0651a7,
     type: 3}
-  GeospatialPrefabGoal_game: {fileID: 919132149155446097, guid: 862be4f7320087f478a729b85f9ec82d,
+  GeospatialPrefabGoal_game: {fileID: 919132149155446097, guid: c2afc4a7e703bde4b91c39c043963fb6,
     type: 3}
   info: {fileID: 1742210522}
   TerrainPrefab: {fileID: 5831908950388203684, guid: a46bc1cf69cc345ba81f34525c7e1b09,
@@ -8328,20 +8328,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: 'GEOSPATIAL VPS
-
-    LAT/LONG: xxx, xxx
-
-    HorizontalAcc: xxx
-
-    ALTITUDE:
-    xxx
-
-    VerticalAcc: xxx
-
-    HEADINGL: xxx
-
-    HeadingAcc: xxx'
+  m_Text: 
 --- !u!222 &1587000029
 CanvasRenderer:
   m_ObjectHideFlags: 0

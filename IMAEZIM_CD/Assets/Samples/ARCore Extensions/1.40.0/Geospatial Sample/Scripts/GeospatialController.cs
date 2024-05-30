@@ -2180,8 +2180,23 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                 Debug.Log("API 객체를 찾을 수 없습니다.");
             }
             //SnackBarText.text = "현재 위치 확인 중";
-            //OnGetStartedClicked();
-            OnClearAllClicked_nav();   //history 지우기
+            //OnGetStartedClicked(); 
+            //history 지우기
+            foreach (var anchor in _anchorObjects_nav)
+            {
+                Destroy(anchor);
+            }
+
+            _anchorObjects_nav.Clear();
+            _historyCollection_nav.Collection.Clear();
+            //SnackBarText.text = "Anchor(s) cleared!";
+            //ClearAllButton.gameObject.SetActive(false);
+            SaveGeospatialAnchorHistory_nav();
+
+            gpsLine.Clear();
+            gpsPoint.Clear();
+            lineList.Clear();
+
             api.gpsCallback(getGpsData); //gps 리스트 저장된 후에 실행
             LineRenderer();
             //SaveGeospatialAnchorHistory();
@@ -2189,9 +2204,12 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             //3d 오브젝트 크기 조정
             ScaleObject(GeospatialPrefabArrow, 0.2f);
             ScaleObject(GeospatialPrefabArrow_game, 0.2f);
-
+            ScaleObject(GeospatialPrefabGoal_game, 0.1f);
             //메모 & 현재 위치 거리 확인
             InvokeRepeating("checkMemoDistance", 0, 2.0f);  //2초마다 비교
+
+            //memoLatitude = double.Parse(PlayerPrefs.GetString("memoLatitudeKey"));
+            //memoLongitude = double.Parse(PlayerPrefs.GetString("memoLongitudeKey"));
         }
 
         public void addHistory(double latitude, double longitude, double altitude, Quaternion eunRotation, string objType)  //_historyCollection 리스트에 history 추가
@@ -2392,24 +2410,24 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
 
             if (memoLatitude == 0 || currentLatitude == 0)
             {
-                OutsideButton.gameObject.SetActive(false);
+                //OutsideButton.gameObject.SetActive(false);
 
             }
             else
             {
                 memoDistance = CalculateDistance(memoLatitude, memoLongitude, currentLatitude, currentLongitude);  //거리 계산
-                Debug.Log("거리" + memoDistance);
+                //Debug.Log("거리" + memoDistance);
                 //30m 안에 메모 있는지 확인
                 if (memoDistance <= 0.03)  //0.03km
                 {
                     //Debug.Log("30m 반경 내에 메모!" + memoDistance);
-                    OutsideButton.gameObject.SetActive(true);
+                    //OutsideButton.gameObject.SetActive(true);
                     //버튼 보이게
                 }
                 else
                 {
                     //Debug.Log("30m 반경 내에 메모 없음!" + memoDistance);
-                    OutsideButton.gameObject.SetActive(false);
+                    //OutsideButton.gameObject.SetActive(false);
                 }
             }
         }

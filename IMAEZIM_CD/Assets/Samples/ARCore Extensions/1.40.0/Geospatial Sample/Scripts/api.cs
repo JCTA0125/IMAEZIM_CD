@@ -123,13 +123,16 @@ public class api : MonoBehaviour
     //메모 위치 받아오는 함수
     public void getMemoGps()
     {
-        //memoLatitude = 37.651634;   //안드에서 받아오게 수정
-        //memoLongitude = 127.016865; 
+        //memoLatitude = 37.502931; //37.651634;   //안드에서 받아오게 수정
+        //memoLongitude = 127.101594; //127.016865; 
         //PlayerPrefs.SetString("memoLatitudeKey", memoLatitude.ToString());  //나중에 주석처리
         //PlayerPrefs.SetString("memoLongitudeKey", memoLongitude.ToString());
 
+        //memoLatitude = double.Parse(PlayerPrefs.GetString("memoLatitudeKey"));
         memoLatitude = double.Parse(PlayerPrefs.GetString("memoLatitudeKey"));
+        //memoLongitude = double.Parse(PlayerPrefs.GetString("memoLongitudeKey"));
         memoLongitude = double.Parse(PlayerPrefs.GetString("memoLongitudeKey"));
+
     }
     public void getStratGps()
     {
