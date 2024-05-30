@@ -17,12 +17,6 @@ public class ObjectMemo : MonoBehaviour
     public InputField memoText;
     private List<Texture2D> Img10 = new();
     private int objId, del_objId;
-    private string myId = "1";
-    public void AndUserId(string id)  //안드로이드에서 호출할 함수
-    {
-        Debug.Log("AndUserInfo 실행 id = " + id);
-        myId = id;
-    }
 
     public void CameraOn()
     {
@@ -166,7 +160,7 @@ public class ObjectMemo : MonoBehaviour
         WWWForm form = new();
         string objid = objId.ToString();
         string del_objid = del_objId.ToString();
-        string userId = myId;
+        string userId = MainMenu.UserId;
         string text = memoText.text;
         string open = "public";
         yield return null;

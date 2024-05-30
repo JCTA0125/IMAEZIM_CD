@@ -114,17 +114,6 @@ public class CloudAnchorManager : MonoBehaviour
     public VideoPlayer vp;
     public AudioSource aSource;
     private string myNickname = "CodeDuck";
-    private string myId = "3";
-    public void AndUserId(string id)  //안드로이드에서 호출할 함수
-    {
-        Debug.Log("AndUserInfo 실행 id = " + id);
-        myId = id;
-    }
-    public void AndUserNick(string nickname)  //안드로이드에서 호출할 함수
-    {
-        Debug.Log("AndUserInfo 실행 nickname = " + nickname);
-        myNickname = nickname;
-    }
 
     [SerializeField] private Camera arCamera;
 
@@ -134,7 +123,7 @@ public class CloudAnchorManager : MonoBehaviour
     void Start()
     {
         //MapManager MapInstance = new();
-        //myNickname = "CodeDuck";
+        myNickname = MainMenu.UserNickname;
         //myId = "2";
 
         hostButton.onClick.AddListener(() => {
@@ -302,7 +291,7 @@ public class CloudAnchorManager : MonoBehaviour
             PopUp_R.SetActive(false);
             MEMO.text = "";
             pop_img.texture = null;
-            ImageSizeReturn(pop_img, 500, 400);
+            ImageSizeReturn(pop_img, 550, 450);
             buttonRP.gameObject.SetActive(false);
             buttonRS.gameObject.SetActive(false);
             pop_img.gameObject.SetActive(true);
@@ -315,7 +304,7 @@ public class CloudAnchorManager : MonoBehaviour
             string url = "http://34.64.197.160:8000/inside/addMemo/";
             WWWForm form = new WWWForm();
 
-            string userId = myId;
+            string userId = MainMenu.UserId;
             string anchorId = cloudAnchor.cloudAnchorId;
             string memoType = typem;
             string latitude = MapManager.latitude.ToString();
@@ -555,7 +544,7 @@ public class CloudAnchorManager : MonoBehaviour
         imgr.texture = texture;
         imgr.SetNativeSize();
         ImageSizeSetting(img, 500, 400);
-        ImageSizeSetting(pop_img, 500, 400);
+        ImageSizeSetting(pop_img, 550, 450);
     }
     IEnumerator ServerImage(string url)
     {
@@ -567,7 +556,7 @@ public class CloudAnchorManager : MonoBehaviour
             Texture2D texture = DownloadHandlerTexture.GetContent(www);
             pop_img.texture = texture;
             pop_img.SetNativeSize();
-            ImageSizeSetting(pop_img, 500, 400);
+            ImageSizeSetting(pop_img, 550, 450);
         }
         else messageText.text = "Failed to download image: " + www.error;
     }
@@ -601,7 +590,7 @@ public class CloudAnchorManager : MonoBehaviour
         v.texture = vp.texture;
         v.SetNativeSize();
         ImageSizeSetting(video, 500, 400);
-        ImageSizeSetting(pop_img, 500, 400);
+        ImageSizeSetting(pop_img, 550, 450);
 
         vp.Play(); // 비디오 재생
     }
@@ -626,7 +615,7 @@ public class CloudAnchorManager : MonoBehaviour
             }
             pop_img.texture = vp.texture;
             pop_img.SetNativeSize();
-            ImageSizeSetting(pop_img, 500, 400);
+            ImageSizeSetting(pop_img, 550, 450);
             vp.Play();
         }
         else messageText.text = "Failed to download video: " + www.error;
