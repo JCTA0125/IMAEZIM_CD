@@ -22,7 +22,7 @@ public class MainMenu : MonoBehaviour
     static public string UserNickname = "CodeDuck";
     public void AndUserId(string id)  //안드로이드에서 호출할 함수
     {
-        Debug.Log("AndUserInfo 실행 id = " + id);
+        Debug.Log("AndUserId 실행 id = " + id);
         UserId = id;
     }
     public void AndUserInfo(string email)  //안드로이드에서 호출할 함수
@@ -32,16 +32,29 @@ public class MainMenu : MonoBehaviour
     }
     public void AndUserNick(string nickname)  //안드로이드에서 호출할 함수
     {
-        Debug.Log("AndUserInfo 실행 nickname = " + nickname);
+        Debug.Log("AndUserNick 실행 nickname = " + nickname);
         UserNickname = nickname;
     }
-
+    public void AndLatitude(string latitude)  //일반 길찾기에서 호출
+    {
+        PlayerPrefs.SetString("NavigationMode", "memoNav");  //길찾기 일반 모드
+        Debug.Log("AndLatitude 실행 latitude = " + latitude);
+        PlayerPrefs.SetString("memoLatitudeKey", latitude);
+    }
+    public void AndLongitude(string longitude)  //안드에서 AndLatitude 먼저 호출
+    {
+        Debug.Log("AndLongitude 실행 longitude = " + longitude);
+        PlayerPrefs.SetString("memoLongitudeKey", longitude);
+        SceneManager.LoadScene("Geospatial");
+    }
+    /*
     public void AndMemoNav(string latitude, string longitude)  //안드로이드에서 호출할 함수
     {
         PlayerPrefs.SetString("memoLatitudeKey", latitude);
         PlayerPrefs.SetString("memoLongitudeKey", longitude);
         SceneManager.LoadScene("Geospatial");
     }
+    */
 
     public void OnClickOutdoor()
     {

@@ -458,7 +458,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             _showAnchorSettingsPanel = !_showAnchorSettingsPanel;
             if (_showAnchorSettingsPanel)
             {
-                SetAnchorPanelState(true);
+                SetAnchorPanelState(false); //
             }
             else
             {
@@ -890,6 +890,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             InfoPanel.SetActive(true);
             if (earthTrackingState == TrackingState.Tracking)
             {
+                /*
                 InfoText.text = string.Format(
                 "Latitude/Longitude: {1}°, {2}°{0}" +
                 "Horizontal Accuracy: {3}m{0}" +
@@ -905,6 +906,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                 pose.VerticalAccuracy.ToString("F2"),
                 pose.EunRotation.ToString("F1"),
                 pose.OrientationYawAccuracy.ToString("F1"));
+                */
                 //길찾기
                 //현재 위치, 고도 업데이트
                 currentLatitude = pose.Latitude;
@@ -929,7 +931,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             }
             else
             {
-                InfoText.text = "GEOSPATIAL POSE: not tracking";
+                //InfoText.text = "GEOSPATIAL POSE: not tracking";
             }
 
             //3d 오브젝트 터치
@@ -1226,9 +1228,11 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             string memoType = PlayerPrefs.GetString("MemoType"); // 추가
             string memoTypeForServer = "";
             //string userId = AndUserId;//"111@111.com"; //일단 user id
-            string userId = "222@222.com";
+            //string userId = "222@222.com";
+            string userId = MainMenu.UserEmail;
             //string writer = UserNickName;
-            string writer = "Oda";
+            //string writer = "Oda";
+            string writer = MainMenu.UserNickname;
             int postId = 0;         //일단 0으로  //서버 만들어지면 수정 -> postId가 저장되려면 새로 만든 앵커가 생기면 다시 다 불러오는 방법이 필요함
             string text = null;
             byte[] picture = null; //for server
