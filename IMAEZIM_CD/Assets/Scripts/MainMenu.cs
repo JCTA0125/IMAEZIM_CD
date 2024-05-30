@@ -18,16 +18,29 @@ public class MainMenu : MonoBehaviour
     }
 
     static public string UserId = "1";
+    static public string UserEmail = "a@a.com";
     static public string UserNickname = "CodeDuck";
     public void AndUserId(string id)  //안드로이드에서 호출할 함수
     {
         Debug.Log("AndUserInfo 실행 id = " + id);
         UserId = id;
     }
+    public void AndUserInfo(string email)  //안드로이드에서 호출할 함수
+    {
+        Debug.Log("AndUserInfo 실행 email = " + email);
+        UserEmail = email;
+    }
     public void AndUserNick(string nickname)  //안드로이드에서 호출할 함수
     {
         Debug.Log("AndUserInfo 실행 nickname = " + nickname);
         UserNickname = nickname;
+    }
+
+    public void AndMemoNav(string latitude, string longitude)  //안드로이드에서 호출할 함수
+    {
+        PlayerPrefs.SetString("memoLatitudeKey", latitude);
+        PlayerPrefs.SetString("memoLongitudeKey", longitude);
+        SceneManager.LoadScene("Geospatial");
     }
 
     public void OnClickOutdoor()
