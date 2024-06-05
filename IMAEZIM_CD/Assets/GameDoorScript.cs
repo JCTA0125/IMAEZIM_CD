@@ -17,7 +17,7 @@ public class GameDoorScript : MonoBehaviour
                 if (hit.collider.CompareTag("Door")) //Door 이란 씬을 만든다. 
                 {
                     // 여기서 "YourSceneName"을 로드할 씬의 이름으로 바꿔주세요
-                    SceneManager.LoadScene("MainTitleScene");
+                    SceneManager.LoadScene("Scene_Lobby");
                 }
             }
         }

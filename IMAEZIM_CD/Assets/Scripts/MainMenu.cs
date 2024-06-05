@@ -71,6 +71,7 @@ public class MainMenu : MonoBehaviour
 
     public void OnClickGame()
     {
+        SceneManager.LoadScene("Scene_Lobby");
         Debug.Log("Game Clicked");
     }
 
