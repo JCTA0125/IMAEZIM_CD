@@ -1686,6 +1686,11 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                         Instantiate(GeospatialPrefabGoal, anchor.transform) :
                         Instantiate(TerrainPrefab, anchor.transform);
                     }
+
+                    if(anchorGO != null)
+                    {
+                        anchorGO.tag = "Door";
+                    }
                 }
                 else { anchorGO = null; }
 
