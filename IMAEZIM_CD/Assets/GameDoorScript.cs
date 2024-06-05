@@ -4,12 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class GameDoorScript : MonoBehaviour
-{ 
-    void Start()
-    {
-        
-    }
-
+{
 
     void Update()
     {

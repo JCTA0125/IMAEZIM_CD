@@ -66,6 +66,8 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
     {
         [Header("AR Components")]
 
+        public Boolean isRay = false;
+
         /// <summary>
         /// The ARSessionOrigin used in the sample.
         /// </summary>
@@ -656,6 +658,10 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
         /// </summary>
         public void Update()
         {
+            if (isRay)
+            {
+                RaycastManager.enabled = true;
+            }
             if (memoLatitude != 0.0)
             {
                 altitudeBtn.gameObject.SetActive(true);
@@ -1687,10 +1693,6 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                         Instantiate(TerrainPrefab, anchor.transform);
                     }
 
-                    if(anchorGO != null)
-                    {
-                        anchorGO.tag = "Door";
-                    }
                 }
                 else { anchorGO = null; }
 
