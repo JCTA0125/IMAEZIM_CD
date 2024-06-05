@@ -29,6 +29,7 @@ public class CloudAnchorManager : MonoBehaviour
     public Text messageText;    // 메세지 출력 텍스트
     public Mode mode = Mode.READY;
     public ARAnchorManager anchorManager;
+    //public CloudAnchorManager anchorManager;
     public ARRaycastManager raycastManager;
     public ARPlaneManager PlaneManager;
 
@@ -38,8 +39,9 @@ public class CloudAnchorManager : MonoBehaviour
     private GameObject anchorGameObject;    // 저장 객체 변수(삭제하기 위한 용도)
     private GameObject indicatorGO;
     private MapQualityIndicator _qualityIndicator = null;
+    public ARPlane plane;
 
-    private ARAnchor localAnchor;   // 로컬앵커 저장 변수
+    private ARAnchor localAnchor;  // 로컬앵커 저장 변수
     private ARCloudAnchor cloudAnchor;  // 클라우드 앵커 변수
     private List<ARRaycastHit> hits = new List<ARRaycastHit>(); // Raycast Hit
 
@@ -85,7 +87,7 @@ public class CloudAnchorManager : MonoBehaviour
         public MemoContent memo_content;
         public string nickname;
     }
-    /*
+    
     [Serializable]
     public class Wrapper
     {
@@ -428,21 +430,14 @@ public class CloudAnchorManager : MonoBehaviour
                     ARPlane plane = PlaneManager.GetPlane(hits[0].trackableId);
                     var planeType = PlaneAlignment.HorizontalUp;
                     planeType = plane.alignment;
-                    localAnchor = anchorManager.AddAnchor(hits[0].pose);    // 로컬 앵커 생성
-
-                  //  Pose pose = hits[0].pose;
-                //    double latitude = pose.position.x;   // 가상의 위치, 실제로는 적절한 값을 설정해야 합니다.
-               //     double longitude = pose.position.z; // 가상의 위치, 실제로는 적절한 값을 설정해야 합니다.
-                 //   double altitude = pose.position.y;   // 가상의 위치, 실제로는 적절한 값을 설정해야 합니다.
-                  //  Quaternion rotation = pose.rotation;
-
-                    //localAnchor = ARAnchorManagerExtensions.AddAnchor(anchorManager, latitude, longitude, altitude, rotation);
-
+                    //localAnchor = ARAnchorManagerExtensions.AddAnchor(anchorManager,hits[0].pose);    // 로컬 앵커 생성
+                    localAnchor = anchorManager.AttachAnchor(plane, hits[0].pose);    // 로컬 앵커 생성
                     anchorGameObject = Instantiate(anchorPrefab, localAnchor.transform);    // 로컬 앵커 위치에 객체 증강시키고 변수에 저장
                     indicatorGO = Instantiate(MapQualityIndicatorPrefab, localAnchor.transform);
                     _qualityIndicator = indicatorGO.GetComponent<MapQualityIndicator>();
                     _qualityIndicator.DrawIndicator(planeType, arCamera);
                 }
+                
             }
         }
     }
@@ -839,6 +834,6 @@ public class CloudAnchorManager : MonoBehaviour
         hostButton.gameObject.SetActive(true);
         messageText.text = "";
     }
-    */
+    
     
 }

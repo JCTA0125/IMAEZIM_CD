@@ -4,6 +4,7 @@ using TMPro;
 using Unity.VisualScripting;
 using Unity.XR.CoreUtils;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Windows;
 using Button = UnityEngine.UI.Button;
@@ -402,6 +403,14 @@ public class ForQuizUI : MonoBehaviour
 
         Quaternion quizRotation = Quaternion.LookRotation(direction);
         return quizRotation;
+    }
+    #endregion
+
+    #region BACKBTN
+
+    public void BackBtnClicked()
+    {
+        SceneManager.LoadScene("MainTitleScene");
     }
     #endregion
 }

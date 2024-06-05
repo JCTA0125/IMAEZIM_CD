@@ -4057,6 +4057,7 @@ MonoBehaviour:
     type: 3}
   audioPrefab: {fileID: 5374611392959825047, guid: fe1e8a1c2a0a72741a9905610beee361,
     type: 3}
+  plane: {fileID: 5736581594543791272, guid: 3738bd65ede154463b2c35064b9e5fdb, type: 3}
   historyList: []
   PopUp_H: {fileID: 679466681}
   PopUp_T: {fileID: 446802004}
