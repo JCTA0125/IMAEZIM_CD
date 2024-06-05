@@ -22,6 +22,7 @@ using UnityEngine.SceneManagement;
 
 public class CloudAnchorManager : MonoBehaviour
 {
+   
     public enum Mode { READY, HOST, HOST_PENDING, RESOLVE, RESOLVE_PENDING };   // 상태 변수
 
     public Button hostButton, resetButton, cancelButton, backButton;  
@@ -84,6 +85,7 @@ public class CloudAnchorManager : MonoBehaviour
         public MemoContent memo_content;
         public string nickname;
     }
+    /*
     [Serializable]
     public class Wrapper
     {
@@ -119,7 +121,7 @@ public class CloudAnchorManager : MonoBehaviour
 
     public InputField inputAddress;
     public byte[] postByte;
-
+    
     void Start()
     {
         //MapManager MapInstance = new();
@@ -301,7 +303,7 @@ public class CloudAnchorManager : MonoBehaviour
 
         IEnumerator PostMemo(string typem)
         {
-            string url = "http://34.64.197.160:8000/inside/addMemo/";
+            string url = "http://34.64.248.130:8000/inside/addMemo/";
             WWWForm form = new WWWForm();
 
             string userId = MainMenu.UserId;
@@ -346,7 +348,7 @@ public class CloudAnchorManager : MonoBehaviour
 
         IEnumerator MemoInfoGet() //url 요청 코루틴
         {
-            string url = "http://34.64.197.160:8000/inside/memoInfo/";
+            string url = "http://34.64.248.130:8000/inside/memoInfo/";
             UnityWebRequest www = UnityWebRequest.Get(url); // get 방식으로 요청을 보냄.
             yield return www.SendWebRequest(); //응답이 올 때까지 기다림.
 
@@ -427,6 +429,15 @@ public class CloudAnchorManager : MonoBehaviour
                     var planeType = PlaneAlignment.HorizontalUp;
                     planeType = plane.alignment;
                     localAnchor = anchorManager.AddAnchor(hits[0].pose);    // 로컬 앵커 생성
+
+                  //  Pose pose = hits[0].pose;
+                //    double latitude = pose.position.x;   // 가상의 위치, 실제로는 적절한 값을 설정해야 합니다.
+               //     double longitude = pose.position.z; // 가상의 위치, 실제로는 적절한 값을 설정해야 합니다.
+                 //   double altitude = pose.position.y;   // 가상의 위치, 실제로는 적절한 값을 설정해야 합니다.
+                  //  Quaternion rotation = pose.rotation;
+
+                    //localAnchor = ARAnchorManagerExtensions.AddAnchor(anchorManager, latitude, longitude, altitude, rotation);
+
                     anchorGameObject = Instantiate(anchorPrefab, localAnchor.transform);    // 로컬 앵커 위치에 객체 증강시키고 변수에 저장
                     indicatorGO = Instantiate(MapQualityIndicatorPrefab, localAnchor.transform);
                     _qualityIndicator = indicatorGO.GetComponent<MapQualityIndicator>();
@@ -548,7 +559,7 @@ public class CloudAnchorManager : MonoBehaviour
     }
     IEnumerator ServerImage(string url)
     {
-        UnityWebRequest www = UnityWebRequestTexture.GetTexture("http://34.64.197.160:8000" + url);
+        UnityWebRequest www = UnityWebRequestTexture.GetTexture("http://34.64.248.130:8000" + url);
         yield return www.SendWebRequest();
         if (www.result == UnityWebRequest.Result.Success)
         {
@@ -596,7 +607,7 @@ public class CloudAnchorManager : MonoBehaviour
     }
     IEnumerator LoadVideo2(string videoURL)
     {
-        UnityWebRequest www = UnityWebRequest.Get("http://34.64.197.160:8000" + videoURL);
+        UnityWebRequest www = UnityWebRequest.Get("http://34.64.248.130:8000" + videoURL);
         www.downloadHandler = new DownloadHandlerBuffer();
         yield return www.SendWebRequest();
 
@@ -652,7 +663,7 @@ public class CloudAnchorManager : MonoBehaviour
     }
     IEnumerator LoadAudio2(string url)
     {
-        UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("http://34.64.197.160:8000" + url, AudioType.MPEG);
+        UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("http://34.64.248.130:8000" + url, AudioType.MPEG);
         yield return www.SendWebRequest();
 
         if (www.result == UnityWebRequest.Result.Success)
@@ -828,4 +839,6 @@ public class CloudAnchorManager : MonoBehaviour
         hostButton.gameObject.SetActive(true);
         messageText.text = "";
     }
+    */
+    
 }

@@ -59,7 +59,7 @@ public class GetServer : MonoBehaviour
     {
        // while (true) // 계속해서 반복되는 무한 루프
         //{
-            string url = "http://34.64.197.160:8000/outside/memoInfo/";
+            string url = "http://34.64.248.130:8000/outside/memoInfo/";
 
             UnityWebRequest www = UnityWebRequest.Get(url); // get 방식으로 요청을 보냄.
 

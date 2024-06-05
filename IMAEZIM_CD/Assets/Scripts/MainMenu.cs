@@ -65,7 +65,7 @@ public class MainMenu : MonoBehaviour
 
     public void OnClickIndoor()
     {
-        SceneManager.LoadScene("SampleScene");
+        SceneManager.LoadScene("IndoorScene");
     }
 
 
@@ -90,6 +90,11 @@ public class MainMenu : MonoBehaviour
     public void OnClickBackBtn()
     {
         SceneManager.LoadScene("MainTitleScene");
+    }
+
+    public void QuizBtnClicked()
+    {
+        SceneManager.LoadScene("Quiz3DScene");
     }
 
 }
