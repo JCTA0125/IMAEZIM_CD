@@ -5,7 +5,6 @@ using Photon.Pun;
 using Photon.Realtime;
 using System;
 using UnityEngine.UI;
-using UnityEngine.Networking;
 
 public class Damage : MonoBehaviourPun
 {
@@ -113,49 +112,12 @@ public class Damage : MonoBehaviourPun
 
     void YouLose()
     {
-        StartCoroutine(PostGameResult(false));
         StartCoroutine(ResultPanel(false));
-    }
-
-    IEnumerator PostGameResult(bool result)
-    {
-        string url = "http://34.64.248.130:8000/stadium/results/";
-        WWWForm form = new WWWForm();
-
-        string userId = PhotonNetwork.NickName;
-        string resultString = null;
-        if (result)
-        {
-            resultString = "win";
-        }
-        else
-        {
-            resultString = "lose";
-        }
-
-        yield return null;
-        //이건 왜 넣는 걸까?
-
-        form.AddField("username", userId);
-        form.AddField("result", resultString);
-
-        UnityWebRequest www = UnityWebRequest.Post(url, form);
-        yield return www.SendWebRequest();
-
-        if (www.error == null)
-        {
-            Debug.Log("post succes");
-        }
-        else
-        {
-            Debug.Log("post error");
-        }
     }
 
     [PunRPC]
     void YouWin()
     {
-        StartCoroutine(PostGameResult(true));
         GameObject player = transform.gameObject;
         Transform jCanvas = player.transform.Find("JCanvas"); //조이스틱만 없애도록 바꾸자.
         if(jCanvas != null)

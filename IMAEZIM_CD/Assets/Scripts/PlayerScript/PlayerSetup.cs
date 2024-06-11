@@ -13,8 +13,11 @@ public class PlayerSetup : MonoBehaviourPun
     // Start is called before the first frame update
     void Start()
     {
+        Debug.Log("setup start");
+        SetPlayerName();
         if (photonView.IsMine) //joystick
         {
+            Debug.Log("setup mine");
             Transform jcanvas = transform.Find("JCanvas");
             transform.Find("Player").GetComponent<Movement>().enabled = true;
 
@@ -43,13 +46,14 @@ public class PlayerSetup : MonoBehaviourPun
             }
             transform.Find("Player").GetComponent<Movement>().enabled = false; 
         }
-        SetPlayerName();
+        
     }
 
     void SetPlayerName()
     {
         if (playerNameText != null)
         {
+            Debug.Log("panel exist");
             if (photonView.IsMine)
             {
                 playerNameText.text = "YOU";
@@ -59,6 +63,10 @@ public class PlayerSetup : MonoBehaviourPun
             {
                 playerNameText.text = photonView.Owner.NickName;
             }
+        }
+        else
+        {
+            Debug.Log("panel none");
         }
     }
 }

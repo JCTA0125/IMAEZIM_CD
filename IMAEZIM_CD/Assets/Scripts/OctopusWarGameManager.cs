@@ -4,6 +4,7 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class OctopusWarGameManager : MonoBehaviourPunCallbacks
 { 
@@ -47,7 +48,7 @@ public class OctopusWarGameManager : MonoBehaviourPunCallbacks
         }
         else
         {
-            SceneLoader.Instance.LoadScene("Scene_Lobby");
+            SceneManager.LoadScene("Scene_Lobby");
         }
 
 
@@ -102,7 +103,7 @@ public class OctopusWarGameManager : MonoBehaviourPunCallbacks
 
     public override void OnLeftRoom()
     {
-        SceneLoader.Instance.LoadScene("Scene_Lobby");
+        SceneManager.LoadScene("Scene_Lobby");
     }
     #endregion
 

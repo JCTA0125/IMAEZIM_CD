@@ -1445,7 +1445,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 2
   joystick: {fileID: 3040555299372813444}
-  bulletSpeed: 300
+  bulletSpeed: 200
   startPosition: {fileID: 8298438194114850460}
   bulletTime: 5
   curTime: 0
@@ -1479,7 +1479,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3505060632797340771}
   serializedVersion: 4
-  m_Mass: 1
+  m_Mass: 20
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}

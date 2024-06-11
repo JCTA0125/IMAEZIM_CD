@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Photon.Pun;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class PlayerSelectionManager : MonoBehaviour
 {
@@ -106,12 +107,12 @@ public class PlayerSelectionManager : MonoBehaviour
 
     public void OnBattleButtonClicked()
     {
-        SceneLoader.Instance.LoadScene("Scene_Lobby");
+        SceneManager.LoadScene("BattleArena_H");
     }
 
     public void OnBackButtonCliced()
     {
-        SceneLoader.Instance.LoadScene("Scene_Lobby");
+        SceneManager.LoadScene("Scene_Lobby");
     }
     #endregion
 
