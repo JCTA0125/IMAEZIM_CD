@@ -452,7 +452,7 @@ public class CloudAnchorManager : MonoBehaviour
         _qualityIndicator.UpdateQualityState(qualityState);
         string mappingText = string.Format("맵핑 품질 = {0}", quality);
 
-        if (quality == FeatureMapQuality.Sufficient || quality == FeatureMapQuality.Good)   // 맵핑 퀄리티가 1 이상일 때 호스팅 요청
+        if (quality == FeatureMapQuality.Sufficient || quality == FeatureMapQuality.Good || quality == FeatureMapQuality.Insufficient)   // 맵핑 퀄리티가 1 이상일 때 호스팅 요청
         {
             cloudAnchor = anchorManager.HostCloudAnchor(localAnchor, 1);    // 1일짜리 앵커포인트
 

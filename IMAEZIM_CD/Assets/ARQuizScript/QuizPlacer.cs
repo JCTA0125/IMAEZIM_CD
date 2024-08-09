@@ -28,7 +28,7 @@ public class QuizPlacer : MonoBehaviour
 
     [Header("GEOTRACKING")]
     public ARPlaneManager ARPlaneManager;
-    public ARPlacementManager ARPlacementManager;
+    public ARPlacementManagers ARPlacementManager;
     public RaycastForAnswer RaycastForAnswer;
     public XROrigin xrOrigin;
 
