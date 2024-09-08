@@ -139,7 +139,7 @@ public class PMovement : MonoBehaviour
         float bT = bulletTime;
         if (buffName == "velocityItem")
         {
-            speed = 30f;
+            speed = speed * 3.0f;
         }
         else if(buffName == "reloadItem")
         {
@@ -149,7 +149,7 @@ public class PMovement : MonoBehaviour
             
         yield return new WaitForSeconds(time);
 
-        speed = 20f;
+        speed = 1.4f;
         bulletTime = bT;
         
     }

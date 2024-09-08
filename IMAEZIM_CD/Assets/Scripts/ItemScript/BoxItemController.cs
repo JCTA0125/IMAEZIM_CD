@@ -192,7 +192,7 @@ public class BoxItemController : MonoBehaviourPunCallbacks, IPunObservable
         }
         else
         {
-            Collider[] collider = Physics.OverlapSphere(gameObject.transform.position, 2.5f);
+            Collider[] collider = Physics.OverlapSphere(gameObject.transform.position, 0.5f);
             foreach(Collider c in collider)
             {
                 if (c.gameObject.tag == "Player"){
