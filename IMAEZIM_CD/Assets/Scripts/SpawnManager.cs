@@ -107,6 +107,13 @@ public class SpawnManager : MonoBehaviourPunCallbacks
                 //전역변수로 저장
                 me = playerGameobject;
                 me.SetActive(false);
+                //respawn 해봄.
+                RespawnScript respawnScript= me.GetComponentInChildren<RespawnScript>();
+                if (respawnScript != null)
+                {
+                    respawnScript.respawnPoint = instantiatePosition;
+                }
+                //respawn 끝.
                 if (PhotonNetwork.AllocateViewID(_photonView)) //viewid 할당 성공
                 {
 

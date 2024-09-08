@@ -35,7 +35,7 @@ public class ARMemoSetVideo : MonoBehaviour
 
     IEnumerator ServerVideoUrl(string recvVideo, string recvWriter)
     {
-        string url = "http://34.64.248.130:8000" + recvVideo;
+        string url = "http://34.22.102.58:8000" + recvVideo;
         UnityWebRequest www = UnityWebRequest.Get(url);
         www.downloadHandler = new DownloadHandlerBuffer();
         yield return www.SendWebRequest();

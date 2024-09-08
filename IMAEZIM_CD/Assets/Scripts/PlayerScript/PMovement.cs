@@ -6,7 +6,7 @@ using Photon.Pun;
 public class PMovement : MonoBehaviour
 {
     [Header("Player")]
-    [SerializeField] float speed = 2f;
+    [SerializeField] float speed = 1.4f;
     [SerializeField] public Joystick joystick;
     Rigidbody rb;
     Vector3 moveVec;
@@ -39,7 +39,7 @@ public class PMovement : MonoBehaviour
         {
         Debug.Log(transform.parent.gameObject.name);
         curTime = 0;
-        if (transform.parent.gameObject.name == "Attacker(Clone)")
+        if (transform.parent.gameObject.name == "Attacker 2(Clone)")
         {
             bulletName = "AttackerBullet";
         }

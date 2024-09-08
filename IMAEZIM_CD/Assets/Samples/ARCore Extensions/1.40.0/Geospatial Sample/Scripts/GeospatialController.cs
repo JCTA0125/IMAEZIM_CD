@@ -1296,7 +1296,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             */
             IEnumerator AddMemoPost()
             {
-                string url = "http://34.64.248.130:8000/outside/addMemo/";
+                string url = "http://34.22.102.58:8000/outside/addMemo/";
                 WWWForm form = new WWWForm();
 
                 if (memoType == "Text")
@@ -1352,7 +1352,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
         IEnumerator GetPostId()
         {
 
-                string url = "http://34.64.248.130:8000/outside/get_last_Postid/" + UnityWebRequest.EscapeURL(userId) + "/";
+                string url = "http://34.22.102.58:8000/outside/get_last_Postid/" + UnityWebRequest.EscapeURL(userId) + "/";
 
                 UnityWebRequest www = UnityWebRequest.Get(url);
 
@@ -1380,7 +1380,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             // string userId = "1"; //id 받아오면 변경s
 
             //user id 를 안전한 url 형태로 변형
-            string url = "http://34.64.248.130:8000/outside/get_last_Image/" + UnityWebRequest.EscapeURL(userId) + "/";
+            string url = "http://34.22.102.58:8000/outside/get_last_Image/" + UnityWebRequest.EscapeURL(userId) + "/";
 
             UnityWebRequest www = UnityWebRequest.Get(url); // get 방식으로 요청을 보냄.
 
@@ -1407,7 +1407,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             // string userId = "1"; //id 받아오면 변경s
 
             //user id 를 안전한 url 형태로 변형
-            string url = "http://34.64.248.130:8000/outside/get_last_Video/" + UnityWebRequest.EscapeURL(userId) + "/";
+            string url = "http://34.22.102.58:8000/outside/get_last_Video/" + UnityWebRequest.EscapeURL(userId) + "/";
 
             UnityWebRequest www = UnityWebRequest.Get(url); // get 방식으로 요청을 보냄.
 

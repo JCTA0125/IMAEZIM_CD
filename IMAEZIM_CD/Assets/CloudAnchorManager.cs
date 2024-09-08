@@ -305,7 +305,7 @@ public class CloudAnchorManager : MonoBehaviour
 
         IEnumerator PostMemo(string typem)
         {
-            string url = "http://34.64.248.130:8000/inside/addMemo/";
+            string url = "http://34.22.102.58:8000/inside/addMemo/";
             WWWForm form = new WWWForm();
 
             string userId = MainMenu.UserId;
@@ -350,7 +350,7 @@ public class CloudAnchorManager : MonoBehaviour
 
         IEnumerator MemoInfoGet() //url 요청 코루틴
         {
-            string url = "http://34.64.248.130:8000/inside/memoInfo/";
+            string url = "http://34.22.102.58:8000/inside/memoInfo/";
             UnityWebRequest www = UnityWebRequest.Get(url); // get 방식으로 요청을 보냄.
             yield return www.SendWebRequest(); //응답이 올 때까지 기다림.
 
@@ -554,7 +554,7 @@ public class CloudAnchorManager : MonoBehaviour
     }
     IEnumerator ServerImage(string url)
     {
-        UnityWebRequest www = UnityWebRequestTexture.GetTexture("http://34.64.248.130:8000" + url);
+        UnityWebRequest www = UnityWebRequestTexture.GetTexture("http://34.22.102.58:8000" + url);
         yield return www.SendWebRequest();
         if (www.result == UnityWebRequest.Result.Success)
         {
@@ -602,7 +602,7 @@ public class CloudAnchorManager : MonoBehaviour
     }
     IEnumerator LoadVideo2(string videoURL)
     {
-        UnityWebRequest www = UnityWebRequest.Get("http://34.64.248.130:8000" + videoURL);
+        UnityWebRequest www = UnityWebRequest.Get("http://34.22.102.58:8000" + videoURL);
         www.downloadHandler = new DownloadHandlerBuffer();
         yield return www.SendWebRequest();
 
@@ -658,7 +658,7 @@ public class CloudAnchorManager : MonoBehaviour
     }
     IEnumerator LoadAudio2(string url)
     {
-        UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("http://34.64.248.130:8000" + url, AudioType.MPEG);
+        UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("http://34.22.102.58:8000" + url, AudioType.MPEG);
         yield return www.SendWebRequest();
 
         if (www.result == UnityWebRequest.Result.Success)

@@ -88,7 +88,7 @@ public class ServerQuizManager : MonoBehaviour
 
     IEnumerator GetQuizInfo()
     {
-        string url = "http://34.64.248.130:8000/quiz/quiz_api/";
+        string url = "http://34.22.102.58:8000/quiz/quiz_api/";
         UnityWebRequest www = UnityWebRequest.Get(url);
         yield return www.SendWebRequest(); //올 때까지 기다림.
 
@@ -116,7 +116,7 @@ public class ServerQuizManager : MonoBehaviour
     }
     IEnumerator GetCorrectCount()
     {
-        string url = $"http://34.64.248.130:8000/quiz/correct_quiz_api/{userId}/";
+        string url = $"http://34.22.102.58:8000/quiz/correct_quiz_api/{userId}/";
         UnityWebRequest www = UnityWebRequest.Get(url);
         yield return www.SendWebRequest();
 
@@ -164,7 +164,7 @@ public class ServerQuizManager : MonoBehaviour
 
             if (quizMovement != null)
             {
-                string url = $"http://34.64.248.130:8000/quiz/quiz_api/{quizMovement.quizId}/";
+                string url = $"http://34.22.102.58:8000/quiz/quiz_api/{quizMovement.quizId}/";
                 UnityWebRequest www = UnityWebRequest.Delete(url);
                 yield return www.SendWebRequest();
 
@@ -203,7 +203,7 @@ public class ServerQuizManager : MonoBehaviour
     public IEnumerator PostQuiz()
     {
 
-        string url = "http://34.64.248.130:8000/quiz/quiz_api/";
+        string url = "http://34.22.102.58:8000/quiz/quiz_api/";
         WWWForm form = new WWWForm(); //데이터를 form 형태로 보낸다. 
 
         //데이터를 넣는다. 
@@ -255,7 +255,7 @@ public class ServerQuizManager : MonoBehaviour
 
     public IEnumerator postSolvedQues(int quizId)
     {
-        string url = "http://34.64.248.130:8000/quiz/correct_quiz_api/";
+        string url = "http://34.22.102.58:8000/quiz/correct_quiz_api/";
         WWWForm form = new WWWForm();
 
         form.AddField("quizId", quizId.ToString());
