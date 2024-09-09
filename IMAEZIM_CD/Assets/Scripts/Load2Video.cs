@@ -5,26 +5,13 @@ using UnityEngine.UI;
 using System.IO;
 using System;
 using UnityEngine.Video;
-
-
+using Google.XR.ARCoreExtensions.Samples.Geospatial;
 public class Load2Viedo : MonoBehaviour
 {
 
-    //    public RawImage img;
+    public GeospatialController controllerScript;
 
 
-    private void Start()
-    {
-        /*
-        Debug.Log(Application.persistentDataPath);
-        //파일이 하나라도 있으면 다시 앱을 킬 때 load 됨.
-        if (File.Exists(Application.persistentDataPath + "/Video"))
-        {
-            byte[] fileData = File.ReadAllBytes(Application.persistentDataPath + "/Video");
-
-        }
-        */
-    }
 
     public void OnClickVideoLoad()
     { //video 도 가능
@@ -56,40 +43,9 @@ public class Load2Viedo : MonoBehaviour
             string base64String = Convert.ToBase64String(fileData);
            // PlayerPrefs.SetString("MemoVideo", savePath + fileName + ".mp4");  //사진 경로 geo에 저장 위해서
             PlayerPrefs.SetString("MemoVideo", base64String);
-            /*
-            //불러오기
-            if (!string.IsNullOrEmpty(file))
-            {
-                StartCoroutine(LoadV(file));
-            }
-            */
         });
-
+        controllerScript.OnApplicationFocus();
     }
-    /*
-    IEnumerator LoadV(string path)
-    {
-        yield return null;
 
-
-        /*
-        // 모든 비디오 플레이어 찾기
-        VideoPlayer[] videoPlayers = plane.GetComponentsInChildren<VideoPlayer>();
-
-        // 동일한 비디오 파일을 모든 비디오 플레이어에 설정하고 재생
-        foreach (var videoPlayer in videoPlayers)
-        {
-            videoPlayer.url = savePath + fileName + ".mp4";
-            videoPlayer.Prepare();
-            videoPlayer.Play();
-
-
-                videoPlayers[0].SetDirectAudioMute(0, true);
-                videoPlayers[0].SetDirectAudioMute(0, true);
-
-        }
-        
-    }
-    */
 
 }

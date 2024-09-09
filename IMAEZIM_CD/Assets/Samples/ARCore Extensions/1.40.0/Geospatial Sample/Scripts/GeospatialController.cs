@@ -2522,5 +2522,27 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             _shouldResolvingHistory_nav = true;
             ResolveHistory_nav();
         }
+
+        public void OnApplicationFocus()
+        {
+            Debug.Log("갤러리에서 돌아옴. AR 세션 재시작.");
+            RestartARSessionAndLocation();
+        }
+
+        void RestartARSessionAndLocation()
+        {
+            if (ARSession.state != ARSessionState.SessionTracking)
+            {
+                Debug.Log("AR 세션이 다시 시작되지 않았음. 재설정 시도.");
+                Session.Reset();  // AR 세션 재설정
+            }
+
+            if (Input.location.status != LocationServiceStatus.Running)
+            {
+                Debug.Log("위치 서비스가 중단됨. 다시 시작.");
+                Input.location.Start();  // 위치 서비스 다시 시작
+            }
+        }
+
     }
 }
