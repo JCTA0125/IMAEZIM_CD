@@ -107,7 +107,7 @@ public class ObjectMemo : MonoBehaviour
     IEnumerator LoadImage(string imageUrl)  //물건 대표 이미지
     {
         int index = imageUrl.IndexOf("/media");
-        using UnityWebRequest www = UnityWebRequestTexture.GetTexture("http://34.22.102.58:8000" + imageUrl[index..]);
+        using UnityWebRequest www = UnityWebRequestTexture.GetTexture("http://34.22.102.33:8000" + imageUrl[index..]);
         yield return www.SendWebRequest();
         messageText.text = "";
         if (www.result == UnityWebRequest.Result.Success)
@@ -124,7 +124,7 @@ public class ObjectMemo : MonoBehaviour
 
     IEnumerator CheckMemo(byte[] img)   //메모 확인
     {
-        string url = "http://34.22.102.58:8000/object/searchObj/";
+        string url = "http://34.22.102.33:8000/object/searchObj/";
         WWWForm form = new();
         form.AddBinaryData("obj_img", img, "image.jpg", "image/jpg");
 
@@ -156,7 +156,7 @@ public class ObjectMemo : MonoBehaviour
 
     IEnumerator PostMemo()  //메모 작성
     {
-        string url = "http://34.22.102.58:8000/object/addText/";
+        string url = "http://34.22.102.33:8000/object/addText/";
         WWWForm form = new();
         string objid = objId.ToString();
         string del_objid = del_objId.ToString();
@@ -188,7 +188,7 @@ public class ObjectMemo : MonoBehaviour
     IEnumerator LoadOldImage(string imageUrl)   //물건 확인용 이미지
     {
         int index = imageUrl.IndexOf("/media");
-        using UnityWebRequest www = UnityWebRequestTexture.GetTexture("http://34.22.102.58:8000" + imageUrl[index..]);
+        using UnityWebRequest www = UnityWebRequestTexture.GetTexture("http://34.22.102.33:8000" + imageUrl[index..]);
         yield return www.SendWebRequest();
         messageText.text = "";
         if (www.result == UnityWebRequest.Result.Success)
@@ -205,7 +205,7 @@ public class ObjectMemo : MonoBehaviour
 
     IEnumerator UploadImages()  //물건 10장 보내기
     {
-        string url = "http://34.22.102.58:8000/object/addObj/";
+        string url = "http://34.22.102.33:8000/object/addObj/";
         WWWForm form = new();
         for (int i = 0; i < 10; i++)
         {

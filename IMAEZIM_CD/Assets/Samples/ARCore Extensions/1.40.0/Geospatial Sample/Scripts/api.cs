@@ -136,11 +136,11 @@ public class api : MonoBehaviour
     }
     public void getStratGps()
     {
-        //startLatitude = 37.652387;  //double.Parse(PlayerPrefs.GetString("startLatitudeKey"));
-        //startLongitude = 127.016292;  //double.Parse(PlayerPrefs.GetString("startLongitudeKey"));
+        startLatitude = 37.651622;  //double.Parse(PlayerPrefs.GetString("startLatitudeKey"));
+        startLongitude = 127.016291;  //double.Parse(PlayerPrefs.GetString("startLongitudeKey"));
 
-        startLatitude = double.Parse(PlayerPrefs.GetString("startLatitudeKey"));
-        startLongitude = double.Parse(PlayerPrefs.GetString("startLongitudeKey"));
+        //startLatitude = double.Parse(PlayerPrefs.GetString("startLatitudeKey"));
+        //startLongitude = double.Parse(PlayerPrefs.GetString("startLongitudeKey"));
     }
 
     private double GetElevationFromGoogleAPI(double latitude, double longitude)

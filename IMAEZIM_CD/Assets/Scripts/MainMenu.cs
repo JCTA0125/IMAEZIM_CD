@@ -77,15 +77,15 @@ public class MainMenu : MonoBehaviour
 
     public void OnClickGameNav()
     {
-        PlayerPrefs.SetString("memoLatitudeKey", "37.652567");
-        PlayerPrefs.SetString("memoLongitudeKey", "127.015322"); //게임장 위치 
+        PlayerPrefs.SetString("memoLatitudeKey", "37.652023");
+        PlayerPrefs.SetString("memoLongitudeKey", "127.016296"); //게임장 위치 
         PlayerPrefs.SetString("NavigationMode", "gameNav");
         SceneManager.LoadScene("Geospatial");
     }
     public void OnClickMemoNav()
     {
-        PlayerPrefs.SetString("memoLatitudeKey", "37.651607");
-        PlayerPrefs.SetString("memoLongitudeKey", "127.016276"); 
+        PlayerPrefs.SetString("memoLatitudeKey", "37.652023");
+        PlayerPrefs.SetString("memoLongitudeKey", "127.016296"); 
         PlayerPrefs.SetString("NavigationMode", "memoNav");
         SceneManager.LoadScene("Geospatial");
     }

@@ -1296,7 +1296,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
             */
             IEnumerator AddMemoPost()
             {
-                string url = "http://34.22.102.58:8000/outside/addMemo/";
+                string url = "http://34.22.102.33:8000/outside/addMemo/";
                 WWWForm form = new WWWForm();
 
                 if (memoType == "Text")
