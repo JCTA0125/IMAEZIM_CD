@@ -18,6 +18,7 @@ using NAudio.Wave;
 using static CloudAnchorManager;
 using Google.XR.ARCoreExtensions.Samples.PersistentCloudAnchors;
 using UnityEngine.SceneManagement;
+using Unity.XR.CoreUtils;
 //using static UnityEditor.Progress;
 
 public class CloudAnchorManager : MonoBehaviour
@@ -45,6 +46,7 @@ public class CloudAnchorManager : MonoBehaviour
     private ARCloudAnchor cloudAnchor;  // 클라우드 앵커 변수
     private List<ARRaycastHit> hits = new List<ARRaycastHit>(); // Raycast Hit
 
+    public XROrigin xrOrigin;
     public struct Memo
     {
         public string anchorId;
@@ -437,6 +439,22 @@ public class CloudAnchorManager : MonoBehaviour
                     var planeType = PlaneAlignment.HorizontalUp;
                     planeType = plane.alignment;
                     //localAnchor = ARAnchorManagerExtensions.AddAnchor(anchorManager,hits[0].pose);    // 로컬 앵커 생성
+
+                    Pose hitPose = hits[0].pose;
+                    Vector3 planeNormal = hitPose.rotation * Vector3.up;
+
+                    if (Vector3.Dot(planeNormal, Vector3.up) < 0.1f)
+                    {
+                        // z축을 천장으로 향하게 하고 y축을 평면에 수직으로 설정
+                        hitPose.rotation = Quaternion.LookRotation(Vector3.up, planeNormal);
+                    }
+                    else
+                    {
+                        hitPose.rotation = Quaternion.LookRotation(Vector3.Cross(Vector3.up, planeNormal), Vector3.up);
+                    }
+
+                    localAnchor = anchorManager.AttachAnchor(plane, hitPose);
+
                     localAnchor = anchorManager.AttachAnchor(plane, hits[0].pose);    // 로컬 앵커 생성
                     anchorGameObject = Instantiate(anchorPrefab, localAnchor.transform);    // 로컬 앵커 위치에 객체 증강시키고 변수에 저장
                     indicatorGO = Instantiate(MapQualityIndicatorPrefab, localAnchor.transform);
