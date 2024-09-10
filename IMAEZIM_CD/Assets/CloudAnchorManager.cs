@@ -22,10 +22,10 @@ using UnityEngine.SceneManagement;
 
 public class CloudAnchorManager : MonoBehaviour
 {
-   
+
     public enum Mode { READY, HOST, HOST_PENDING, RESOLVE, RESOLVE_PENDING };   // 상태 변수
 
-    public Button hostButton, resetButton, cancelButton, backButton;  
+    public Button hostButton, resetButton, cancelButton, backButton;
     public Text messageText;    // 메세지 출력 텍스트
     public Mode mode = Mode.READY;
     public ARAnchorManager anchorManager;
@@ -87,7 +87,7 @@ public class CloudAnchorManager : MonoBehaviour
         public MemoContent memo_content;
         public string nickname;
     }
-    
+
     [Serializable]
     public class Wrapper
     {
@@ -123,7 +123,7 @@ public class CloudAnchorManager : MonoBehaviour
 
     public InputField inputAddress;
     public byte[] postByte;
-    
+
     void Start()
     {
         //MapManager MapInstance = new();
@@ -383,25 +383,30 @@ public class CloudAnchorManager : MonoBehaviour
 
     void Update()
     {
-        if (mode == Mode.HOST) {
+        if (mode == Mode.HOST)
+        {
             //textPrefab.GetComponent<MeshCollider>().enabled = false;
             //textPrefab.GetComponent<BoxCollider>().enabled = true;
             Hosting();
             HostProcessing();
         }
-        if (mode == Mode.HOST_PENDING) {
+        if (mode == Mode.HOST_PENDING)
+        {
             HostPending();
         }
-        if (mode == Mode.RESOLVE) {
+        if (mode == Mode.RESOLVE)
+        {
             Resolving();
         }
-        if (mode == Mode.RESOLVE_PENDING) {
+        if (mode == Mode.RESOLVE_PENDING)
+        {
             //textPrefab.GetComponent<MeshCollider>().enabled = true;
             //textPrefab.GetComponent<BoxCollider>().enabled = false;
             ResolvePending();
             Checking();
         }
-        if (mode == Mode.READY) {
+        if (mode == Mode.READY)
+        {
             //messageText.text = "Ready";
             //Checking();
         }
@@ -424,8 +429,9 @@ public class CloudAnchorManager : MonoBehaviour
                 int layerMask = 1 << LayerMask.NameToLayer("Cube");
                 if (Physics.Raycast(ray, out hitobj, 500f, layerMask))
                 {
-                   
-                } else
+
+                }
+                else
                 {
                     ARPlane plane = PlaneManager.GetPlane(hits[0].trackableId);
                     var planeType = PlaneAlignment.HorizontalUp;
@@ -437,7 +443,7 @@ public class CloudAnchorManager : MonoBehaviour
                     _qualityIndicator = indicatorGO.GetComponent<MapQualityIndicator>();
                     _qualityIndicator.DrawIndicator(planeType, arCamera);
                 }
-                
+
             }
         }
     }
@@ -490,7 +496,7 @@ public class CloudAnchorManager : MonoBehaviour
 
     void getImage() //갤러리 이미지
     {
-        if(!NativeGallery.IsMediaPickerBusy())
+        if (!NativeGallery.IsMediaPickerBusy())
         {
             NativeGallery.GetImageFromGallery((image) =>
             {
@@ -504,7 +510,7 @@ public class CloudAnchorManager : MonoBehaviour
                 }
             });
         }
-    }         
+    }
     IEnumerator LoadImage(string imagePath, RawImage imgr) //이미지 로드 코루틴   
     {
         yield return null;
@@ -671,26 +677,31 @@ public class CloudAnchorManager : MonoBehaviour
         aSource.volume = 1.0f;
     }
 
-    void ImageSizeSetting(RawImage img, float x, float y) {
+    void ImageSizeSetting(RawImage img, float x, float y)
+    {
         var imgX = img.rectTransform.sizeDelta.x;
         var imgY = img.rectTransform.sizeDelta.y;
-        if (x / y > imgX / imgY) {
+        if (x / y > imgX / imgY)
+        {
             img.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, y);
             img.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, imgX * (y / imgY));
         }
-        else {
+        else
+        {
             img.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, x);
             img.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, imgY * (x / imgX));
         }
     }
-    void ImageSizeReturn(RawImage img, float x, float y) {
+    void ImageSizeReturn(RawImage img, float x, float y)
+    {
         img.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, y);
         img.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, x);
     }
 
     void Resolving()
     {
-        if (memoList.Count == 0) {
+        if (memoList.Count == 0)
+        {
             mode = Mode.RESOLVE_PENDING;
             return;
         }
@@ -718,7 +729,8 @@ public class CloudAnchorManager : MonoBehaviour
         bool allAnchorsResolved = true;
         foreach (KeyValuePair<ARCloudAnchor, Memo> item in cloudAnchors)
         {
-            if (item.Key.cloudAnchorState == CloudAnchorState.Success) {
+            if (item.Key.cloudAnchorState == CloudAnchorState.Success)
+            {
                 // 객체 증강
                 if (item.Value.memoType == "A")
                 {
@@ -742,7 +754,8 @@ public class CloudAnchorManager : MonoBehaviour
                 }
                 cloudAnchors.Remove(item.Key);
             }
-            else {
+            else
+            {
                 allAnchorsResolved = false;
                 messageText.text = $"리졸빙 진행 중...{item.Key.cloudAnchorState}";
             }
@@ -773,13 +786,13 @@ public class CloudAnchorManager : MonoBehaviour
                 }
                 else if (anchor.memoType == "B")
                 {
-                    if(anchor.memo_content.Contains("media/picture")) StartCoroutine(ServerImage(anchor.memo_content));
+                    if (anchor.memo_content.Contains("media/picture")) StartCoroutine(ServerImage(anchor.memo_content));
                     else StartCoroutine(LoadImage(anchor.memo_content, pop_img));
                 }
                 else if (anchor.memoType == "D")
                 {
                     vp.gameObject.SetActive(true);
-                    if(anchor.memo_content.Contains("media/video")) StartCoroutine(LoadVideo2(anchor.memo_content));
+                    if (anchor.memo_content.Contains("media/video")) StartCoroutine(LoadVideo2(anchor.memo_content));
                     else StartCoroutine(LoadVideo(anchor.memo_content, vp, pop_img));
                 }
                 else if (anchor.memoType == "C")
@@ -795,11 +808,13 @@ public class CloudAnchorManager : MonoBehaviour
     }
 
     // MainCamera 태그로 지정된 카메라의 위치와 각도를 Pose 데이터 타입으로 반환
-    public Pose GetCameraPose() {
+    public Pose GetCameraPose()
+    {
         return new Pose(Camera.main.transform.position, Camera.main.transform.rotation);
     }
 
-    private void OnHostClick() {
+    private void OnHostClick()
+    {
         mode = Mode.HOST;
     }
 
@@ -834,6 +849,6 @@ public class CloudAnchorManager : MonoBehaviour
         hostButton.gameObject.SetActive(true);
         messageText.text = "";
     }
-    
-    
+
+
 }

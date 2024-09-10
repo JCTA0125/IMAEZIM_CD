@@ -91,6 +91,7 @@ public class GetServer : MonoBehaviour
 
                 foreach (ServerHistory historyItem in historyList)
                 {
+                    Debug.Log("Picture URL: " + historyItem.memo_content.picture);
                     GeospatialAnchorHistory clonedItem = new GeospatialAnchorHistory
                     {
                         SerializedTime = DateTime.Now.ToString(),

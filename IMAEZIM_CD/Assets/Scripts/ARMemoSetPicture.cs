@@ -37,7 +37,7 @@ public class ARMemoSetPicture : MonoBehaviour
     private IEnumerator ServerPictureUrl(string url, string recvWriter)
     {
       //  Debug.Log("picture url is " + url);
-        UnityWebRequest www = UnityWebRequestTexture.GetTexture("http://34.22.102.58:8000" + url);
+        UnityWebRequest www = UnityWebRequestTexture.GetTexture("http://34.22.102.33:8000" + url);
         yield return www.SendWebRequest();
 
         if (www.result == UnityWebRequest.Result.Success)
